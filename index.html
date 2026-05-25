@@ -10,6 +10,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
       --bg: #ffffff; --bg-secondary: #f5f5f3;
@@ -93,8 +94,6 @@
     select option { background: var(--bg); color: var(--text); }
 
     /* ── PRINT ── */
-    @media print {
-      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .no-print { display: none !important; }
       body { background: white; color: black; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
 
@@ -136,42 +135,32 @@
       /* Hide all screen UI */
       .header, .app { display: none; }
     }
-    .print-doc-header, .print-job-bar, .print-section, .print-footer { display: none; }
   </style>
 </head>
 <body>
 
 <!-- ── PRINT LAYOUT ── -->
-<div class="print-doc-header">
-  <div>
-    <div class="print-brand-main">Tactical Wildlife</div>
-    <div class="print-brand-sub">847-474-WILD &nbsp;·&nbsp; tacticalwildlife.com</div>
+
+    
   </div>
-  <div class="print-doc-title">
-    <div class="print-doc-title-main">Job Scope</div>
-    <div class="print-doc-title-sub">For technician use only<br>Keep with job at all times</div>
+  
+    
   </div>
 </div>
 
-<div class="print-job-bar">
-  <div><div class="print-jb-label">Customer</div><div class="print-jb-val" id="print-customer"></div></div>
-  <div><div class="print-jb-label">Scope Date</div><div class="print-jb-val" id="print-date"></div></div>
+</div>
+  <div></div>
 </div>
 
-<div class="print-section" id="print-graph-section" style="display:none;">
-  <div class="print-section-title">Inspection Graph / Aerial Markup</div>
+
   <div id="print-graph-img-wrap"></div>
 </div>
 
-<div class="print-section">
-  <div class="print-section-title" id="print-scope-title">Scope of Work</div>
+
   <div id="print-items-list"></div>
 </div>
 
-<div class="print-footer">
-  <span>Tactical Wildlife &nbsp;·&nbsp; tacticalwildlife.com &nbsp;·&nbsp; 847-474-WILD (9453)</span>
-  <span>Protect People, Preserve Wildlife</span>
-</div>
+
 
 <!-- ── SCREEN APP ── -->
 <div class="header">
@@ -419,64 +408,208 @@
     });
   }
 
-  // ── PDF Export ──
+  // ── PDF Export via jsPDF ──
   function exportPDF() {
-    const name = document.getElementById('customer-name').value.trim();
-    document.getElementById('print-customer').textContent = name || 'Customer';
-    document.getElementById('print-date').textContent = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+    if (!window.jspdf) { alert('PDF library not loaded — check connection and try again.'); return; }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const PW = 210, PH = 297, ML = 14, MR = 14;
+    const CW = PW - ML - MR;
+    let y = 0;
+    const customerName = (document.getElementById('customer-name').value || '').trim() || 'Customer';
+    const dateStr = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
 
-    // Graph
-    const gs = document.getElementById('print-graph-section');
-    const giw = document.getElementById('print-graph-img-wrap');
+    // ── Header ──
+    doc.setFillColor(44, 44, 42);
+    doc.rect(0, 0, PW, 24, 'F');
+    doc.setTextColor(245, 245, 243);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(15);
+    doc.text('TACTICAL WILDLIFE', ML, 10);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(160, 160, 158);
+    doc.text('847-474-WILD  ·  TACTICALWILDLIFE.COM', ML, 16);
+    doc.setTextColor(245, 245, 243);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('JOB SCOPE', PW - MR, 9, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(160, 160, 158);
+    doc.text('For technician use only', PW - MR, 15, { align: 'right' });
+    doc.text('Keep with job at all times', PW - MR, 19.5, { align: 'right' });
+    y = 24;
+
+    // ── Job bar ──
+    doc.setFillColor(44, 44, 42);
+    doc.rect(0, y, PW, 16, 'F');
+    doc.setTextColor(110, 110, 108);
+    doc.setFontSize(6.5);
+    doc.setFont('helvetica', 'normal');
+    doc.text('CUSTOMER', ML, y + 5.5);
+    doc.text('SCOPE DATE', ML + 68, y + 5.5);
+    doc.setTextColor(245, 245, 243);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text(customerName, ML, y + 12);
+    doc.text(dateStr, ML + 68, y + 12);
+    y += 20;
+
+    function addFooter() {
+      doc.setFillColor(44, 44, 42);
+      doc.rect(0, PH - 11, PW, 11, 'F');
+      doc.setTextColor(110, 110, 108);
+      doc.setFontSize(6.5);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Tactical Wildlife  ·  tacticalwildlife.com  ·  847-474-WILD (9453)', ML, PH - 4);
+      doc.text('Protect People, Preserve Wildlife', PW - MR, PH - 4, { align: 'right' });
+    }
+
+    function newPage() {
+      addFooter();
+      doc.addPage();
+      y = 10;
+    }
+
+    function ensureSpace(need) {
+      if (y + need > PH - 16) newPage();
+    }
+
+    // ── Graph ──
     if (graphDataURL) {
-      giw.innerHTML = '<img src="' + graphDataURL + '" class="graph-thumb" alt="Inspection graph"/>';
-      gs.style.display = 'block';
-    } else { gs.style.display = 'none'; }
+      ensureSpace(14);
+      doc.setTextColor(170, 170, 168);
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      doc.text('INSPECTION GRAPH / AERIAL MARKUP', ML, y + 4);
+      y += 8;
+      ensureSpace(70);
+      doc.setDrawColor(220, 218, 214);
+      doc.setLineWidth(0.25);
+      doc.rect(ML, y, CW, 68);
+      try { doc.addImage(graphDataURL, 'JPEG', ML + 0.5, y + 0.5, CW - 1, 67); } catch(e) {}
+      y += 73;
+    }
 
-    // Items
-    const list = document.getElementById('print-items-list');
-    list.innerHTML = '';
-    let itemCount = 0, noteCount = 0;
-    items.forEach((item) => {
-      if (item.type === 'note') {
-        noteCount++;
-        const d = document.createElement('div');
-        d.className = 'print-item';
-        const mat = (item.material||'').trim(), tn = (item.techNotes||'').trim();
-        if (!mat && !tn) return;
-        d.innerHTML =
-          '<div class="print-item-head"><div class="print-item-circle note">★</div>' +
-          '<div><div class="print-item-desc-main">Tech Note</div><div class="print-item-desc-qty">For technician reference only</div></div></div>' +
-          '<div class="print-item-body">' +
-            (mat ? '<div><div class="print-f-label">Material / Spec</div><div class="print-f-val">' + mat + '</div></div>' : '') +
-            (tn  ? '<div><div class="print-f-label">Tech Notes</div><div class="print-f-val">' + tn + '</div></div>' : '') +
-            ((item.photos && item.photos.length) ? item.photos.map((src,i) => '<img src="' + src + '" class="print-item-photo" alt="Photo ' + (i+1) + '"/>').join('') : '') +
-          '</div>';
-        list.appendChild(d);
+    // ── Scope title ──
+    const validItems = items.filter(i => i.type === 'item' && (i.desc||'').trim());
+    const validNotes = items.filter(i => i.type === 'note' && ((i.material||'').trim() || (i.techNotes||'').trim()));
+    const total = validItems.length + validNotes.length;
+    ensureSpace(10);
+    doc.setTextColor(170, 170, 168);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.text('SCOPE OF WORK' + (total ? '  —  ' + total + ' ITEM' + (total !== 1 ? 'S' : '') : ''), ML, y + 4);
+    y += 9;
+
+    // ── Draw item ──
+    function drawItem(item, num) {
+      const isNote = item.type === 'note';
+      const desc = isNote ? 'Tech Note' : (item.desc||'').trim();
+      const qty = (!isNote && item.qty) ? (item.qty + (item.unit !== 'ea' ? ' ' + item.unit : '')) : '';
+      const mat = (item.material||'').trim();
+      const tn = (item.techNotes||'').trim();
+      const photos = item.photos || [];
+
+      // Estimate height
+      const matLines = mat ? doc.splitTextToSize(mat, CW - 8).length : 0;
+      const tnLines = tn ? doc.splitTextToSize(tn, CW - 8).length : 0;
+      const bodyH = (mat ? 8 + matLines * 4.2 + 3 : 0) + (tn ? 8 + tnLines * 4.2 + 3 : 0) + (photos.length * 58) + 4;
+      ensureSpace(14 + Math.min(bodyH, 80));
+
+      // Header bar
+      doc.setFillColor(247, 246, 243);
+      doc.rect(ML, y, CW, 13, 'F');
+      doc.setDrawColor(232, 229, 224);
+      doc.setLineWidth(0.25);
+      doc.rect(ML, y, CW, 13);
+
+      // Circle
+      doc.setFillColor(isNote ? 122 : 44, isNote ? 26 : 44, isNote ? 46 : 42);
+      doc.circle(ML + 8, y + 6.5, 4.2, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(isNote ? 8.5 : 7.5);
+      doc.text(isNote ? '★' : String(num), ML + 8, y + 8.4, { align: 'center' });
+
+      // Desc + qty
+      doc.setTextColor(26, 26, 26);
+      doc.setFontSize(10.5);
+      doc.setFont('helvetica', 'bold');
+      doc.text(desc, ML + 16, y + 7.5);
+      if (qty || isNote) {
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(isNote ? 140 : 100, isNote ? 100 : 100, 100);
+        doc.text(qty || 'For technician reference only', ML + 16, y + 11.5);
+      }
+      y += 13;
+
+      // Body
+      const bodyStart = y;
+      if (mat) {
+        ensureSpace(16);
+        doc.setTextColor(170, 170, 168);
+        doc.setFontSize(6.5);
+        doc.setFont('helvetica', 'bold');
+        doc.text('MATERIAL / SPEC', ML + 4, y + 5.5);
+        y += 8;
+        doc.setTextColor(50, 50, 50);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        const lines = doc.splitTextToSize(mat, CW - 8);
+        doc.text(lines, ML + 4, y);
+        y += lines.length * 4.2 + 3;
+      }
+      if (tn) {
+        ensureSpace(16);
+        doc.setTextColor(170, 170, 168);
+        doc.setFontSize(6.5);
+        doc.setFont('helvetica', 'bold');
+        doc.text('TECH NOTES', ML + 4, y + 5.5);
+        y += 8;
+        doc.setTextColor(50, 50, 50);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        const lines = doc.splitTextToSize(tn, CW - 8);
+        doc.text(lines, ML + 4, y);
+        y += lines.length * 4.2 + 3;
+      }
+      photos.forEach(src => {
+        ensureSpace(58);
+        doc.setDrawColor(224, 221, 216);
+        doc.setLineWidth(0.25);
+        doc.rect(ML + 2, y + 1, CW - 4, 54);
+        try { doc.addImage(src, 'JPEG', ML + 3, y + 2, CW - 6, 52); } catch(e) {}
+        y += 58;
+      });
+
+      // Card border
+      doc.setDrawColor(232, 229, 224);
+      doc.setLineWidth(0.25);
+      doc.rect(ML, bodyStart, CW, y - bodyStart);
+      y += 4;
+    }
+
+    let itemNum = 0;
+    items.forEach(item => {
+      if (item.type === 'item') {
+        if (!(item.desc||'').trim()) return;
+        itemNum++;
+        drawItem(item, itemNum);
       } else {
-        const desc = (item.desc||'').trim(); if (!desc) return;
-        itemCount++;
-        const qtyStr = item.qty ? item.qty + (item.unit !== 'ea' ? ' ' + item.unit : '') : '';
-        const d = document.createElement('div');
-        d.className = 'print-item';
-        d.innerHTML =
-          '<div class="print-item-head"><div class="print-item-circle">' + itemCount + '</div>' +
-          '<div><div class="print-item-desc-main">' + desc + '</div>' +
-          (qtyStr ? '<div class="print-item-desc-qty">' + qtyStr + '</div>' : '') + '</div></div>' +
-          '<div class="print-item-body">' +
-            (item.material ? '<div><div class="print-f-label">Material / Spec</div><div class="print-f-val">' + item.material + '</div></div>' : '') +
-            (item.techNotes ? '<div><div class="print-f-label">Tech Notes</div><div class="print-f-val">' + item.techNotes + '</div></div>' : '') +
-            ((item.photos && item.photos.length) ? item.photos.map((src,i) => '<img src="' + src + '" class="print-item-photo" alt="Photo ' + (i+1) + '"/>').join('') : '') +
-          '</div>';
-        list.appendChild(d);
+        if (!(item.material||'').trim() && !(item.techNotes||'').trim()) return;
+        drawItem(item, 0);
       }
     });
-    const total = itemCount + noteCount;
-    document.getElementById('print-scope-title').textContent = 'Scope of Work' + (total ? ' — ' + total + ' item' + (total !== 1 ? 's' : '') : '');
-    window.print();
+
+    addFooter();
+    const fname = (customerName !== 'Customer' ? customerName.replace(/[^a-z0-9]/gi,'_') : 'TWC') + '_Job_Scope.pdf';
+    doc.save(fname);
   }
 
-  document.getElementById('customer-name').addEventListener('input', updateOutputs);
+    document.getElementById('customer-name').addEventListener('input', updateOutputs);
   addItem(); addItem();
 </script>
 </body>

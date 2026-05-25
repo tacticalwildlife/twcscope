@@ -1,10 +1,12 @@
-const CACHE = 'twc-scope-v12';
+const CACHE = 'twc-scope-v13';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js'
 ];
 
 self.addEventListener('install', e => {
