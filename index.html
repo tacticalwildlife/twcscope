@@ -139,29 +139,6 @@
 </head>
 <body>
 
-<!-- ── PRINT LAYOUT ── -->
-
-    
-  </div>
-  
-    
-  </div>
-</div>
-
-</div>
-  <div></div>
-</div>
-
-
-  <div id="print-graph-img-wrap"></div>
-</div>
-
-
-  <div id="print-items-list"></div>
-</div>
-
-
-
 <!-- ── SCREEN APP ── -->
 <div class="header">
   <img id="header-logo" alt="Tactical Wildlife Control" />
@@ -170,12 +147,12 @@
 
 <div class="app">
 
-  <div style="margin-bottom:12px;" class="no-print">
+  <div style="margin-bottom:12px;">
     <p class="section-label">Customer</p>
     <input type="text" id="customer-name" placeholder="Customer name" style="font-size:16px; font-weight:500;" />
   </div>
 
-  <div class="card no-print" style="margin-bottom:14px;">
+  <div class="card" style="margin-bottom:14px;">
     <p class="section-label" style="margin-bottom:8px;">Upload Graph</p>
     <div id="graph-area">
       <label class="photo-add-btn">
@@ -191,12 +168,12 @@
   <button class="add-btn no-print" onclick="addItem()">+ Add item</button>
   <button class="add-note-btn no-print" onclick="addNote()">★ Add note</button>
 
-  <div class="total-bar no-print">
+  <div class="total-bar">
     <span class="total-label">&#128274; Internal total — enter into Jobber</span>
     <span class="total-amount" id="total-display">$0.00</span>
   </div>
 
-  <div class="card no-print">
+  <div class="card">
     <div class="output-header">
       <span class="tag tag-customer">Customer — General Exclusion</span>
       <button class="copy-btn" id="copy-customer" onclick="copyOutput('customer')">Copy</button>
@@ -204,7 +181,7 @@
     <textarea id="output-customer" readonly></textarea>
   </div>
 
-  <div class="card no-print">
+  <div class="card">
     <div class="output-header">
       <span class="tag tag-tech">Tech scope — private notes</span>
       <button class="copy-btn" id="copy-tech" onclick="copyOutput('tech')">Copy</button>
