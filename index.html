@@ -606,7 +606,19 @@
 
     addFooter();
     const fname = (customerName !== 'Customer' ? customerName.replace(/[^a-z0-9]/gi,'_') : 'TWC') + '_Job_Scope.pdf';
-    doc.save(fname);
+    // iOS Safari: open as blob URL so share sheet appears (Save to Files / Jobber)
+    // Desktop: triggers normal file download
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fname;
+    // iOS ignores 'download' attr — opens in Safari PDF viewer with share sheet
+    // Desktop respects it and downloads directly
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
   }
 
     document.getElementById('customer-name').addEventListener('input', updateOutputs);
