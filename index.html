@@ -246,7 +246,7 @@
   // ── Graph ──
   function handleGraph(input) {
     const file = input.files[0]; if (!file) return;
-    compressImage(file, 1800, 0.82, (compressed) => { graphDataURL = compressed; renderGraph(); });
+    compressImage(file, 1400, 0.76, (compressed) => { graphDataURL = compressed; renderGraph(); });
   }
   function renderGraph() {
     const area = document.getElementById('graph-area');
@@ -294,7 +294,7 @@
 
   function handlePhoto(id, input) {
     const file = input.files[0]; if (!file) return;
-    compressImage(file, 1400, 0.78, (compressed) => {
+    compressImage(file, 960, 0.70, (compressed) => {
       const item = items.find(i => i.id === id);
       if (item) { item.photos = item.photos || []; item.photos.push(compressed); renderItems(); }
     });
