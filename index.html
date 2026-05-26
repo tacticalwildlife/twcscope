@@ -21,10 +21,10 @@
       --amber-bg: #faeeda; --amber-text: #854f0b;
       --green-text: #3b6d11; --danger-bg: #fcebeb; --danger-text: #a32d2d;
       --note-color: #7a1a2e;
+      --label-strong: #444;
+      --label-muted: #666;
     }
     @media (prefers-color-scheme: dark) {
-      .section-label { color: #ccc; }
-      .field-label { color: #aaa; }
       :root {
         --bg: #1c1c1a; --bg-secondary: #2a2a28;
         --border: rgba(255,255,255,0.12); --border-strong: rgba(255,255,255,0.28);
@@ -32,6 +32,9 @@
         --blue-bg: #0c3a6b; --blue-text: #b5d4f4;
         --amber-bg: #4a2b06; --amber-text: #fac775;
         --green-text: #c0dd97; --danger-bg: #4a1515; --danger-text: #f7c1c1;
+        --label-strong: #d0d0ce;
+        --label-muted: #aaa;
+        --note-color: #e8869a;
       }
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -40,11 +43,11 @@
     /* Header */
     .header { background: var(--bg-secondary); border-bottom: 0.5px solid var(--border); padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top)); position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; }
     .header img { height: 38px; width: auto; display: block; }
-    .pdf-btn { font-size: 13px; padding: 8px 14px; border-radius: var(--radius-md); background: #2c2c2a; color: #f5f5f3; border: none; font-family: inherit; cursor: pointer; font-weight: 500; white-space: nowrap; }
+    .pdf-btn { font-size: 13px; padding: 8px 14px; border-radius: var(--radius-md); background: var(--text); color: var(--bg); border: none; font-family: inherit; cursor: pointer; font-weight: 500; white-space: nowrap; }
     .pdf-btn:active { opacity: 0.8; }
 
     .app { padding: 1rem; max-width: 520px; margin: 0 auto; }
-    .section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #444; margin-bottom: 6px; }
+    .section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--label-strong); margin-bottom: 6px; }
     .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 10px; }
     .note-card { background: var(--bg); border: 0.5px solid rgba(122,26,46,0.35); border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 10px; }
 
@@ -72,7 +75,7 @@
     .tag-customer { background: var(--blue-bg); color: var(--blue-text); }
     .tag-tech { background: var(--amber-bg); color: var(--amber-text); }
 
-    .field-label { font-size: 11px; color: #666; font-weight: 500; margin-bottom: 4px; }
+    .field-label { font-size: 11px; color: var(--label-muted); font-weight: 500; margin-bottom: 4px; }
 
     .total-bar { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
     .total-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
