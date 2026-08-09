@@ -104,6 +104,41 @@
 <body>
 
 <!-- ── SCREEN APP ── -->
+<datalist id="twc-items">
+  <option value="Bird Nest Removal"></option>
+  <option value="16' Garage Door Seal"></option>
+  <option value="8/9' Garage Door Seal"></option>
+  <option value="Side Seal Shields"></option>
+  <option value="Fill Fabric Corner Caps"></option>
+  <option value="Fill Fabric Siding"></option>
+  <option value="Rodent Shield"></option>
+  <option value="Dryer Vent Cover"></option>
+  <option value="Bathroom Vent Cover"></option>
+  <option value="Underground Fencing – Hardware Cloth"></option>
+  <option value="Underground Fencing – LVG/Pest Blok"></option>
+  <option value="Ridge Guard"></option>
+  <option value="Power Vent"></option>
+  <option value="Box Vent"></option>
+  <option value="Gable Vent LVG"></option>
+  <option value="Hooded Vent"></option>
+  <option value="Soffit Return"></option>
+  <option value="Fascia Reinforcement"></option>
+  <option value="Solar Panel Pest Blocker"></option>
+  <option value="Gutter Cleaning"></option>
+  <option value="Gutter Guard Install"></option>
+  <option value="Gutter Guard Removal"></option>
+  <option value="Pest Blok – Easy Access (1 story)"></option>
+  <option value="Pest Blok – Standard/Tougher Cuts"></option>
+  <option value="Pest Blok – 2nd Story/Roofline"></option>
+  <option value="Pest Blok – Peak/Roof Walk/Heavy Ladder"></option>
+  <option value="Pest Control Spray (existing monthly)"></option>
+  <option value="In2Care Station (existing monthly)"></option>
+  <option value="Pest Control Spray (other frequency)"></option>
+  <option value="In2Care Station (other frequency)"></option>
+  <option value="Mosquito Spray Only"></option>
+  <option value="In2Care Station (mosquito only)"></option>
+</datalist>
+
 <div class="header">
   <img id="header-logo" alt="Tactical Wildlife Control" />
   <button class="pdf-btn" onclick="exportPDF()">&#128196; Export PDF</button>
@@ -160,6 +195,59 @@
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
   }
 
+
+  // ── Price List ──
+  const PRICE_LIST = [
+    { name: 'Bird Nest Removal', price: null, hint: '$650–$1,200', unit: 'ea', cat: 'Services' },
+    { name: "16' Garage Door Seal", price: 500, hint: '', unit: 'ea', cat: 'Ground/Low Height' },
+    { name: "8/9' Garage Door Seal", price: 300, hint: '', unit: 'ea', cat: 'Ground/Low Height' },
+    { name: 'Side Seal Shields', price: 250, hint: '', unit: 'pair', cat: 'Ground/Low Height' },
+    { name: 'Fill Fabric Corner Caps', price: 30, hint: '', unit: 'ea', cat: 'Ground/Low Height' },
+    { name: 'Fill Fabric Siding', price: 9, hint: '', unit: 'LF', cat: 'Ground/Low Height' },
+    { name: 'Rodent Shield', price: 23, hint: '', unit: 'LF', cat: 'Ground/Low Height' },
+    { name: 'Dryer Vent Cover', price: 55, hint: '', unit: 'ea', cat: 'Ground/Low Height' },
+    { name: 'Bathroom Vent Cover', price: 55, hint: '', unit: 'ea', cat: 'Ground/Low Height' },
+    { name: 'Underground Fencing – Hardware Cloth', price: 37, hint: '', unit: 'LF', cat: 'Ground/Low Height' },
+    { name: 'Underground Fencing – LVG/Pest Blok', price: 52, hint: '', unit: 'LF', cat: 'Ground/Low Height' },
+    { name: 'Ridge Guard', price: null, hint: '$28–35/LF', unit: 'LF', cat: 'Roof/Heights' },
+    { name: 'Power Vent', price: 250, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Box Vent', price: 250, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Gable Vent LVG', price: 375, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Hooded Vent', price: 150, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Soffit Return', price: 315, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Fascia Reinforcement', price: 315, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Solar Panel Pest Blocker', price: null, hint: '$28–35', unit: 'LF', cat: 'Roof/Heights' },
+    { name: 'Gutter Cleaning', price: 7, hint: '', unit: 'LF', cat: 'Gutters' },
+    { name: 'Gutter Guard Install', price: null, hint: 'TBD', unit: 'LF', cat: 'Gutters' },
+    { name: 'Gutter Guard Removal', price: null, hint: 'TBD', unit: 'LF', cat: 'Gutters' },
+    { name: 'Pest Blok – Easy Access (1 story)', price: 22, hint: '', unit: 'SF', cat: 'Pest Blok' },
+    { name: 'Pest Blok – Standard/Tougher Cuts', price: 24, hint: '', unit: 'SF', cat: 'Pest Blok' },
+    { name: 'Pest Blok – 2nd Story/Roofline', price: 28, hint: '', unit: 'SF', cat: 'Pest Blok' },
+    { name: 'Pest Blok – Peak/Roof Walk/Heavy Ladder', price: 32, hint: '', unit: 'SF', cat: 'Pest Blok' },
+    { name: 'Pest Control Spray (existing monthly)', price: 20, hint: '', unit: 'ea', cat: 'Pest Control' },
+    { name: 'In2Care Station (existing monthly)', price: 20, hint: '', unit: 'station', cat: 'Pest Control' },
+    { name: 'Pest Control Spray (other frequency)', price: 75, hint: '', unit: 'ea', cat: 'Pest Control' },
+    { name: 'In2Care Station (other frequency)', price: 25, hint: '', unit: 'station', cat: 'Pest Control' },
+    { name: 'Mosquito Spray Only', price: 175, hint: '', unit: 'ea', cat: 'Pest Control' },
+    { name: 'In2Care Station (mosquito only)', price: 30, hint: '', unit: 'station', cat: 'Pest Control' },
+  ];
+
+  function handleDescChange(id, value) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    item.desc = value;
+    const match = PRICE_LIST.find(p => p.name.toLowerCase() === value.toLowerCase());
+    if (match) {
+      item.unit = match.unit;
+      item.price = match.price !== null ? match.price : '';
+      item._priceHint = match.hint || '';
+      renderItems();
+    } else {
+      item._priceHint = '';
+      updateOutputs();
+    }
+  }
+
   let items = [];
   let nextId = 1;
   let graphDataURL = null;
@@ -190,7 +278,7 @@
 
   // ── Items ──
   function addItem() {
-    items.push({ type:'item', id:nextId++, qty:'', unit:'ea', desc:'', price:'', material:'', techNotes:'', photos:[] });
+    items.push({ type:'item', id:nextId++, qty:'', unit:'ea', desc:'', price:'', material:'', techNotes:'', photos:[], _priceHint:'' });
     renderItems();
   }
   function addNote() {
@@ -280,12 +368,12 @@
             '<button class="remove-btn" onclick="removeItem(' + item.id + ')">&#215;</button>' +
           '</div>' +
           '<div class="row3">' +
-            '<div><div class="field-label">Description</div><input type="text" placeholder="e.g. box vents" value="' + (item.desc||'') + '" oninput="updateItem(' + item.id + ',\'desc\',this.value)"/></div>' +
+            '<div><div class="field-label">Description</div><input type="text" list="twc-items" placeholder="Search or type item..." value="' + (item.desc||'') + '" oninput="handleDescChange(' + item.id + ',this.value)" onchange="handleDescChange(' + item.id + ',this.value)"/></div>' +
             '<div><div class="field-label">Qty</div><input type="number" placeholder="1" min="0" value="' + (item.qty||'') + '" oninput="updateItem(' + item.id + ',\'qty\',this.value)"/></div>' +
             '<div><div class="field-label">Unit</div><select onchange="updateItem(' + item.id + ',\'unit\',this.value)">' + UNITS.map(u => '<option' + (u===item.unit?' selected':'') + '>' + u + '</option>').join('') + '</select></div>' +
           '</div>' +
           '<div class="row2">' +
-            '<div><div class="field-label">Price/unit <span style="color:var(--text-tertiary)">(internal)</span></div><input type="number" placeholder="0.00" min="0" step="0.01" value="' + (item.price||'') + '" oninput="updateItem(' + item.id + ',\'price\',this.value)"/></div>' +
+            '<div><div class="field-label">Price/unit <span style="color:var(--text-tertiary)">(internal)</span></div><input type="number" placeholder="' + (item._priceHint || '0.00') + '" min="0" step="0.01" value="' + (item.price||'') + '" oninput="updateItem(' + item.id + ',\'price\',this.value)"/></div>' +
             '<div><div class="field-label">Material / spec <span style="color:var(--text-tertiary)">(tech)</span></div><input type="text" placeholder="e.g. 16ga galv. hw cloth" value="' + (item.material||'') + '" oninput="updateItem(' + item.id + ',\'material\',this.value)"/></div>' +
           '</div>' +
           '<div style="margin-bottom:8px;"><div class="field-label">Tech notes <span style="color:var(--text-tertiary)">(tech only)</span></div><input type="text" placeholder=\'e.g. staple every 3", overlap 2"\' value="' + (item.techNotes||'') + '" oninput="updateItem(' + item.id + ',\'techNotes\',this.value)"/></div>' +
