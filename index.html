@@ -411,7 +411,6 @@
             '<input type="text" placeholder="e.g. N95 respirator, bio-enzyme spray" value="' + (item.material||'') + '" oninput="updateItem(' + item.id + ',\'material\',this.value)"/></div>' +
           '<div style="margin-bottom:8px;"><div class="field-label">Tech notes</div>' +
             '<input type="text" placeholder="e.g. Full PPE required, document before and after" value="' + (item.techNotes||'') + '" oninput="updateItem(' + item.id + ',\'techNotes\',this.value)"/></div>' +
-          '<div class="line-total-bar" id="lt-' + item.id + '"><span class="line-total-label">Line total</span><span class="line-total-amount zero">—</span></div>' +
           '<div><div class="field-label">Photos <span style="color:var(--text-tertiary)">(optional)</span></div>' +
             photoRowHTML(item) +
           '</div>';
@@ -432,14 +431,15 @@
             autocomplete="off" />
           <div class="price-dropdown" id="pd-' + item.id + '"></div>
         </div></div>' +
-            '<div><div class="field-label">Qty</div><input type="number" placeholder="1" min="0" value="' + (item.qty||'') + '" oninput="updateItem(' + item.id + ',\'qty\',this.value)"/></div>' +
+            '<div><div class="field-label">Qty</div><input type="number" placeholder="1" min="0" value="' + (item.qty||'') + '" oninput="updateItem(' + item.id + ',\'qty\',this.value);updateLineTotal(' + item.id + ')"/></div>' +
             '<div><div class="field-label">Unit</div><select onchange="updateItem(' + item.id + ',\'unit\',this.value)">' + UNITS.map(u => '<option' + (u===item.unit?' selected':'') + '>' + u + '</option>').join('') + '</select></div>' +
           '</div>' +
           '<div class="row2">' +
-            '<div><div class="field-label">Price/unit <span style="color:var(--text-tertiary)">(internal)</span></div><input type="number" placeholder="' + (item._priceHint || '0.00') + '" min="0" step="0.01" value="' + (item.price||'') + '" oninput="updateItem(' + item.id + ',\'price\',this.value)"/></div>' +
+            '<div><div class="field-label">Price/unit <span style="color:var(--text-tertiary)">(internal)</span></div><input type="number" placeholder="' + (item._priceHint || '0.00') + '" min="0" step="0.01" value="' + (item.price||'') + '" oninput="updateItem(' + item.id + ',\'price\',this.value);updateLineTotal(' + item.id + ')"/></div>' +
             '<div><div class="field-label">Material / spec <span style="color:var(--text-tertiary)">(tech)</span></div><input type="text" placeholder="e.g. 16ga galv. hw cloth" value="' + (item.material||'') + '" oninput="updateItem(' + item.id + ',\'material\',this.value)"/></div>' +
           '</div>' +
           '<div style="margin-bottom:8px;"><div class="field-label">Tech notes <span style="color:var(--text-tertiary)">(tech only)</span></div><input type="text" placeholder=\'e.g. staple every 3", overlap 2"\' value="' + (item.techNotes||'') + '" oninput="updateItem(' + item.id + ',\'techNotes\',this.value)"/></div>' +
+          '<div class="line-total-bar" id="lt-' + item.id + '"><span class="line-total-label">Line total</span><span class="line-total-amount zero">—</span></div>' +
           '<div class="line-total-bar" id="lt-' + item.id + '"><span class="line-total-label">Line total</span><span class="line-total-amount zero">—</span></div>' +
           '<div><div class="field-label">Photos <span style="color:var(--text-tertiary)">(optional)</span></div>' +
             photoRowHTML(item) +
