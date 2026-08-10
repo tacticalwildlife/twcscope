@@ -122,6 +122,14 @@
     .price-option:last-child { border-bottom: none; }
     .price-option:active { background: var(--bg-secondary); }
     .price-option-price { font-size: 11px; color: var(--label-muted); white-space: nowrap; margin-left: 8px; }
+
+    .line-total-bar {
+      display: flex; justify-content: flex-end; align-items: center;
+      padding: 6px 0 2px; border-top: 0.5px solid var(--border); margin-top: 8px;
+    }
+    .line-total-label { font-size: 11px; color: var(--label-muted); margin-right: 6px; }
+    .line-total-amount { font-size: 14px; font-weight: 600; color: var(--text); }
+    .line-total-amount.zero { color: var(--label-muted); font-weight: 400; }
 </style>
 </head>
 <body>
@@ -277,6 +285,25 @@
     if (!e.target.closest('.price-combo')) closePriceDropdowns();
   });
 
+  function updateLineTotal(id) {
+    const item = items.find(i => i.id === id);
+    const el = document.getElementById('lt-' + id);
+    if (!item || !el) return;
+    const qty = parseFloat(item.qty) || 0;
+    const price = parseFloat(item.price) || 0;
+    const total = qty * price;
+    const amtEl = el.querySelector('.line-total-amount');
+    if (amtEl) {
+      if (total > 0) {
+        amtEl.textContent = '$' + total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+        amtEl.className = 'line-total-amount';
+      } else {
+        amtEl.textContent = '—';
+        amtEl.className = 'line-total-amount zero';
+      }
+    }
+  }
+
   let items = [];
   let nextId = 1;
   let graphDataURL = null;
@@ -384,6 +411,7 @@
             '<input type="text" placeholder="e.g. N95 respirator, bio-enzyme spray" value="' + (item.material||'') + '" oninput="updateItem(' + item.id + ',\'material\',this.value)"/></div>' +
           '<div style="margin-bottom:8px;"><div class="field-label">Tech notes</div>' +
             '<input type="text" placeholder="e.g. Full PPE required, document before and after" value="' + (item.techNotes||'') + '" oninput="updateItem(' + item.id + ',\'techNotes\',this.value)"/></div>' +
+          '<div class="line-total-bar" id="lt-' + item.id + '"><span class="line-total-label">Line total</span><span class="line-total-amount zero">—</span></div>' +
           '<div><div class="field-label">Photos <span style="color:var(--text-tertiary)">(optional)</span></div>' +
             photoRowHTML(item) +
           '</div>';
@@ -412,6 +440,7 @@
             '<div><div class="field-label">Material / spec <span style="color:var(--text-tertiary)">(tech)</span></div><input type="text" placeholder="e.g. 16ga galv. hw cloth" value="' + (item.material||'') + '" oninput="updateItem(' + item.id + ',\'material\',this.value)"/></div>' +
           '</div>' +
           '<div style="margin-bottom:8px;"><div class="field-label">Tech notes <span style="color:var(--text-tertiary)">(tech only)</span></div><input type="text" placeholder=\'e.g. staple every 3", overlap 2"\' value="' + (item.techNotes||'') + '" oninput="updateItem(' + item.id + ',\'techNotes\',this.value)"/></div>' +
+          '<div class="line-total-bar" id="lt-' + item.id + '"><span class="line-total-label">Line total</span><span class="line-total-amount zero">—</span></div>' +
           '<div><div class="field-label">Photos <span style="color:var(--text-tertiary)">(optional)</span></div>' +
             photoRowHTML(item) +
           '</div>';
@@ -419,6 +448,8 @@
       container.appendChild(div);
     });
     updateOutputs();
+    // Refresh line totals after render
+    items.forEach(it => { if (it.type === 'item') updateLineTotal(it.id); });
 
     // Init Sortable
     if (window._sortable) window._sortable.destroy();
