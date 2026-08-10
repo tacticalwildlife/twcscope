@@ -99,46 +99,34 @@
     select option { background: var(--bg); color: var(--text); }
       body { background: white; color: black; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
 
+
+    /* ── Price Autocomplete Dropdown ── */
+    .price-combo { position: relative; }
+    .price-dropdown {
+      display: none; position: absolute; top: 100%; left: 0; right: 0;
+      background: var(--bg); border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md); z-index: 100;
+      max-height: 220px; overflow-y: auto;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18); margin-top: 2px;
+    }
+    .price-dropdown.open { display: block; }
+    .price-cat-label {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--label-muted); padding: 8px 10px 3px; pointer-events: none;
+    }
+    .price-option {
+      padding: 9px 10px; font-size: 13px; color: var(--text); cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .price-option:last-child { border-bottom: none; }
+    .price-option:active { background: var(--bg-secondary); }
+    .price-option-price { font-size: 11px; color: var(--label-muted); white-space: nowrap; margin-left: 8px; }
 </style>
 </head>
 <body>
 
 <!-- ── SCREEN APP ── -->
-<datalist id="twc-items">
-  <option value="Bird Nest Removal"></option>
-  <option value="16' Garage Door Seal"></option>
-  <option value="8/9' Garage Door Seal"></option>
-  <option value="Side Seal Shields"></option>
-  <option value="Fill Fabric Corner Caps"></option>
-  <option value="Fill Fabric Siding"></option>
-  <option value="Rodent Shield"></option>
-  <option value="Dryer Vent Cover"></option>
-  <option value="Bathroom Vent Cover"></option>
-  <option value="Underground Fencing – Hardware Cloth"></option>
-  <option value="Underground Fencing – LVG/Pest Blok"></option>
-  <option value="Ridge Guard"></option>
-  <option value="Power Vent"></option>
-  <option value="Box Vent"></option>
-  <option value="Gable Vent LVG"></option>
-  <option value="Hooded Vent"></option>
-  <option value="Soffit Return"></option>
-  <option value="Fascia Reinforcement"></option>
-  <option value="Solar Panel Pest Blocker"></option>
-  <option value="Gutter Cleaning"></option>
-  <option value="Gutter Guard Install"></option>
-  <option value="Gutter Guard Removal"></option>
-  <option value="Pest Blok – Easy Access (1 story)"></option>
-  <option value="Pest Blok – Standard/Tougher Cuts"></option>
-  <option value="Pest Blok – 2nd Story/Roofline"></option>
-  <option value="Pest Blok – Peak/Roof Walk/Heavy Ladder"></option>
-  <option value="Pest Control Spray (existing monthly)"></option>
-  <option value="In2Care Station (existing monthly)"></option>
-  <option value="Pest Control Spray (other frequency)"></option>
-  <option value="In2Care Station (other frequency)"></option>
-  <option value="Mosquito Spray Only"></option>
-  <option value="In2Care Station (mosquito only)"></option>
-</datalist>
-
 <div class="header">
   <img id="header-logo" alt="Tactical Wildlife Control" />
   <button class="pdf-btn" onclick="exportPDF()">&#128196; Export PDF</button>
@@ -232,21 +220,62 @@
     { name: 'In2Care Station (mosquito only)', price: 30, hint: '', unit: 'station', cat: 'Pest Control' },
   ];
 
-  function handleDescChange(id, value) {
+  function handleDescInput(id, value) {
     const item = items.find(i => i.id === id);
     if (!item) return;
     item.desc = value;
-    const match = PRICE_LIST.find(p => p.name.toLowerCase() === value.toLowerCase());
-    if (match) {
-      item.unit = match.unit;
-      item.price = match.price !== null ? match.price : '';
-      item._priceHint = match.hint || '';
-      renderItems();
-    } else {
-      item._priceHint = '';
-      updateOutputs();
-    }
+    updateOutputs();
+    showPriceDropdown(id, value);
   }
+
+  function showPriceDropdown(id, query) {
+    const dd = document.getElementById('pd-' + id);
+    if (!dd) return;
+    if (!query || query.length < 1) { dd.classList.remove('open'); return; }
+    const q = query.toLowerCase();
+    const matches = PRICE_LIST.filter(p => p.name.toLowerCase().includes(q));
+    if (!matches.length) { dd.classList.remove('open'); return; }
+
+    // Group by category
+    const cats = {};
+    matches.forEach(p => { if (!cats[p.cat]) cats[p.cat] = []; cats[p.cat].push(p); });
+
+    let html2 = '';
+    Object.entries(cats).forEach(([cat, items2]) => {
+      html2 += '<div class="price-cat-label">' + cat + '</div>';
+      items2.forEach(p => {
+        const priceStr = p.price !== null ? ('$' + p.price + '/' + p.unit) : (p.hint || 'Enter price');
+        html2 += '<div class="price-option" onclick="selectPrice(' + id + ',' + JSON.stringify(p.name) + ')">' +
+          '<span>' + p.name + '</span>' +
+          '<span class="price-option-price">' + priceStr + '</span>' +
+          '</div>';
+      });
+    });
+    dd.innerHTML = html2;
+    dd.classList.add('open');
+  }
+
+  function selectPrice(id, name) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    const match = PRICE_LIST.find(p => p.name === name);
+    if (!match) return;
+    item.desc = match.name;
+    item.unit = match.unit;
+    item.price = match.price !== null ? match.price : '';
+    item._priceHint = match.hint || '';
+    closePriceDropdowns();
+    renderItems();
+  }
+
+  function closePriceDropdowns() {
+    document.querySelectorAll('.price-dropdown').forEach(d => d.classList.remove('open'));
+  }
+
+  // Close dropdowns when tapping outside
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.price-combo')) closePriceDropdowns();
+  });
 
   let items = [];
   let nextId = 1;
@@ -368,7 +397,13 @@
             '<button class="remove-btn" onclick="removeItem(' + item.id + ')">&#215;</button>' +
           '</div>' +
           '<div class="row3">' +
-            '<div><div class="field-label">Description</div><input type="text" list="twc-items" placeholder="Search or type item..." value="' + (item.desc||'') + '" oninput="handleDescChange(' + item.id + ',this.value)" onchange="handleDescChange(' + item.id + ',this.value)"/></div>' +
+            '<div><div class="field-label">Description</div><div class="price-combo">
+          <input type="text" placeholder="Search or type item..." value="' + (item.desc||'') + '" 
+            oninput="handleDescInput(' + item.id + ',this.value)"
+            onfocus="showPriceDropdown(' + item.id + ',this.value)"
+            autocomplete="off" />
+          <div class="price-dropdown" id="pd-' + item.id + '"></div>
+        </div></div>' +
             '<div><div class="field-label">Qty</div><input type="number" placeholder="1" min="0" value="' + (item.qty||'') + '" oninput="updateItem(' + item.id + ',\'qty\',this.value)"/></div>' +
             '<div><div class="field-label">Unit</div><select onchange="updateItem(' + item.id + ',\'unit\',this.value)">' + UNITS.map(u => '<option' + (u===item.unit?' selected':'') + '>' + u + '</option>').join('') + '</select></div>' +
           '</div>' +
