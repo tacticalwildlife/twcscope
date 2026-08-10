@@ -253,7 +253,7 @@
       html2 += '<div class="price-cat-label">' + cat + '</div>';
       items2.forEach(p => {
         const priceStr = p.price !== null ? ('$' + p.price + '/' + p.unit) : (p.hint || 'Enter price');
-        html2 += '<div class="price-option" onclick="selectPrice(' + id + ',' + JSON.stringify(p.name) + ')">' +
+        html2 += '<div class="price-option" onclick="selectPrice(' + id + ',' + JSON.stringify(p.name).replace(/"/g,'&quot;') + ')">' +
           '<span>' + p.name + '</span>' +
           '<span class="price-option-price">' + priceStr + '</span>' +
           '</div>';
