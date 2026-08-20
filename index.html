@@ -6,6 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Scope Builder">
+  <meta name="color-scheme" content="dark">
   <title>TWC Scope Builder</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
@@ -13,29 +14,18 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
-      --bg: #ffffff; --bg-secondary: #f5f5f3;
-      --border: rgba(0,0,0,0.12); --border-strong: rgba(0,0,0,0.28);
-      --text: #1a1a1a; --text-secondary: #666; --text-tertiary: #999;
+      color-scheme: dark;
+      --bg: #1e1f21; --bg-secondary: #101112;
+      --border: rgba(255,255,255,0.16); --border-strong: rgba(255,255,255,0.32);
+      --text: #f6f6f5; --text-secondary: #c7c7c5; --text-tertiary: #9a9a98;
+      --placeholder: #9a9a98;
       --radius-md: 8px; --radius-lg: 12px;
-      --blue-bg: #e6f1fb; --blue-text: #185fa5;
-      --amber-bg: #faeeda; --amber-text: #854f0b;
-      --green-text: #3b6d11; --danger-bg: #fcebeb; --danger-text: #a32d2d;
-      --note-color: #7a1a2e;
-      --label-strong: #444;
-      --label-muted: #666;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #1c1c1a; --bg-secondary: #2a2a28;
-        --border: rgba(255,255,255,0.12); --border-strong: rgba(255,255,255,0.28);
-        --text: #f0f0ee; --text-secondary: #aaa; --text-tertiary: #666;
-        --blue-bg: #0c3a6b; --blue-text: #b5d4f4;
-        --amber-bg: #4a2b06; --amber-text: #fac775;
-        --green-text: #c0dd97; --danger-bg: #4a1515; --danger-text: #f7c1c1;
-        --label-strong: #d0d0ce;
-        --label-muted: #aaa;
-        --note-color: #e8869a;
-      }
+      --blue-bg: #123a63; --blue-text: #bfe0ff;
+      --amber-bg: #4a2b06; --amber-text: #ffcf8a;
+      --green-text: #b9e08c; --danger-bg: #4a1515; --danger-text: #ffc4c4;
+      --note-color: #ee9bad;
+      --label-strong: #eeeeec;
+      --label-muted: #b0b0ae;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg-secondary); color: var(--text); min-height: 100vh; padding-bottom: env(safe-area-inset-bottom); }
@@ -65,7 +55,7 @@
     .add-note-btn { width: 100%; padding: 13px 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--bg); color: var(--note-color); font-size: 14px; font-weight: 500; cursor: pointer; margin-bottom: 16px; font-family: inherit; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
     .add-btn:active { background: var(--bg-secondary); box-shadow: none; }
     .add-note-btn:active { background: var(--bg-secondary); box-shadow: none; }
-    ::placeholder { opacity: 0.35; font-weight: 300; }
+    ::placeholder { color: var(--placeholder); opacity: 1; font-weight: 400; }
 
     .copy-btn { font-size: 13px; padding: 7px 13px; border: 0.5px solid var(--border-strong); border-radius: var(--radius-md); background: transparent; color: var(--text-secondary); cursor: pointer; font-family: inherit; white-space: nowrap; }
     .copy-btn.copied { color: var(--green-text); border-color: var(--green-text); }
@@ -97,8 +87,6 @@
     .graph-thumb { width: 100%; max-height: 220px; object-fit: contain; border-radius: var(--radius-md); border: 0.5px solid var(--border); display: block; margin-top: 8px; }
     .photo-remove { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--danger-text); color: white; border: none; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
     select option { background: var(--bg); color: var(--text); }
-      body { background: white; color: black; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-
 
     /* ── Price Autocomplete Dropdown ── */
     .price-combo { position: relative; }
