@@ -168,6 +168,11 @@
     <span class="total-amount" id="total-display">$0.00</span>
   </div>
 
+  <div class="total-bar" style="margin-top:-2px;">
+    <span class="total-label">&#128737; Annual warranty (10%, $300 min)</span>
+    <span class="total-amount" id="warranty-display" style="font-size:20px;">$0.00</span>
+  </div>
+
   <div class="card">
     <div class="output-header">
       <span class="tag tag-customer">Customer — General Exclusion</span>
@@ -226,6 +231,12 @@
     { name: 'In2Care Station (other frequency)', price: 25, hint: '', unit: 'station', cat: 'Pest Control' },
     { name: 'Mosquito Spray Only', price: 175, hint: '', unit: 'ea', cat: 'Pest Control' },
     { name: 'In2Care Station (mosquito only)', price: 30, hint: '', unit: 'station', cat: 'Pest Control' },
+    { name: 'Spot Sealing Ground Level – Level 1 (1-3 pts)', price: 150, hint: '', unit: 'ea', cat: 'Ground/Low Height' },
+    { name: 'Spot Sealing Ground Level – Level 2 (4-7 pts)', price: 250, hint: '', unit: 'ea', cat: 'Ground/Low Height' },
+    { name: 'Spot Sealing Ground Level – Level 3 (8+ pts)', price: 375, hint: '', unit: 'ea', cat: 'Ground/Low Height' },
+    { name: 'Spot Sealing at Heights – Level 1 (1-3 pts)', price: 225, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Spot Sealing at Heights – Level 2 (4-7 pts)', price: 350, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Spot Sealing at Heights – Level 3 (8+ pts)', price: 500, hint: '', unit: 'ea', cat: 'Roof/Heights' },
   ];
 
   function handleDescInput(id, value) {
@@ -320,12 +331,12 @@
   // ── Graph ──
   function handleGraph(input) {
     const file = input.files[0]; if (!file) return;
-    compressImage(file, 1400, 0.76, (compressed) => { graphDataURL = compressed; renderGraph(); });
+    compressImage(file, 1400, 0.76, (compressed, w, h) => { graphDataURL = { src: compressed, w: w, h: h }; renderGraph(); });
   }
   function renderGraph() {
     const area = document.getElementById('graph-area');
     if (graphDataURL) {
-      area.innerHTML = '<div class="photo-thumb-wrap" style="width:100%;"><img src="' + graphDataURL + '" class="graph-thumb" alt="Inspection graph"/><button class="photo-remove" onclick="removeGraph()" style="top:-6px;right:-6px;">&#215;</button></div>';
+      area.innerHTML = '<div class="photo-thumb-wrap" style="width:100%;"><img src="' + graphDataURL.src + '" class="graph-thumb" alt="Inspection graph"/><button class="photo-remove" onclick="removeGraph()" style="top:-6px;right:-6px;">&#215;</button></div>';
     } else {
       area.innerHTML = '<label class="photo-add-btn">&#128247; Upload graph / aerial<input type="file" accept="image/*" onchange="handleGraph(this)" style="display:none;"></label>';
     }
@@ -359,7 +370,7 @@
         const canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        callback(canvas.toDataURL('image/jpeg', quality));
+        callback(canvas.toDataURL('image/jpeg', quality), w, h);
       };
       img.src = e.target.result;
     };
@@ -368,9 +379,9 @@
 
   function handlePhoto(id, input) {
     const file = input.files[0]; if (!file) return;
-    compressImage(file, 960, 0.70, (compressed) => {
+    compressImage(file, 1280, 0.75, (compressed, w, h) => {
       const item = items.find(i => i.id === id);
-      if (item) { item.photos = item.photos || []; item.photos.push(compressed); renderItems(); }
+      if (item) { item.photos = item.photos || []; item.photos.push({ src: compressed, w: w, h: h }); renderItems(); }
     });
   }
   function removePhoto(id, idx) {
@@ -381,8 +392,8 @@
   function photoRowHTML(item) {
     const photos = item.photos || [];
     let html = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">';
-    photos.forEach((src, idx) => {
-      html += '<div class="photo-thumb-wrap"><img src="' + src + '" class="photo-thumb" alt="Photo ' + (idx+1) + '"/>' +
+    photos.forEach((photo, idx) => {
+      html += '<div class="photo-thumb-wrap"><img src="' + photo.src + '" class="photo-thumb" alt="Photo ' + (idx+1) + '"/>' +
         '<button class="photo-remove" onclick="removePhoto(' + item.id + ',' + idx + ')">&#215;</button></div>';
     });
     html += '</div>';
@@ -485,6 +496,9 @@
     document.getElementById('output-customer').value = customerLines.join('\n');
     document.getElementById('output-tech').value = techLines.join('\n');
     document.getElementById('total-display').textContent = '$' + total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    const warranty = total > 0 ? Math.max(total * 0.10, 300) : 0;
+    const warrantyEl = document.getElementById('warranty-display');
+    if (warrantyEl) warrantyEl.textContent = '$' + warranty.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
   }
 
   function copyOutput(type) {
@@ -565,6 +579,12 @@
       if (y + need > PH - 16) newPage();
     }
 
+    function fitBox(imgW, imgH, maxW, maxH) {
+      if (!imgW || !imgH) return { w: maxW, h: maxH };
+      const scale = Math.min(maxW / imgW, maxH / imgH);
+      return { w: imgW * scale, h: imgH * scale };
+    }
+
     // ── Graph ──
     if (graphDataURL) {
       ensureSpace(14);
@@ -573,12 +593,16 @@
       doc.setFont('helvetica', 'bold');
       doc.text('INSPECTION GRAPH / AERIAL MARKUP', ML, y + 4);
       y += 8;
-      ensureSpace(70);
+      const gBoxH = 80;
+      ensureSpace(gBoxH + 2);
+      const gFit = fitBox(graphDataURL.w, graphDataURL.h, CW - 2, gBoxH - 2);
+      const gX = ML + (CW - gFit.w) / 2;
+      const gY = y + (gBoxH - gFit.h) / 2;
       doc.setDrawColor(220, 218, 214);
       doc.setLineWidth(0.25);
-      doc.rect(ML, y, CW, 68);
-      try { doc.addImage(graphDataURL, 'JPEG', ML + 0.5, y + 0.5, CW - 1, 67); } catch(e) {}
-      y += 73;
+      doc.rect(ML, y, CW, gBoxH);
+      try { doc.addImage(graphDataURL.src, 'JPEG', gX, gY, gFit.w, gFit.h); } catch(e) {}
+      y += gBoxH + 5;
     }
 
     // ── Scope title ──
@@ -604,7 +628,7 @@
       // Estimate height
       const matLines = mat ? doc.splitTextToSize(mat, CW - 8).length : 0;
       const tnLines = tn ? doc.splitTextToSize(tn, CW - 8).length : 0;
-      const bodyH = (mat ? 8 + matLines * 4.2 + 3 : 0) + (tn ? 8 + tnLines * 4.2 + 3 : 0) + (photos.length * 58) + 4;
+      const bodyH = (mat ? 8 + matLines * 4.2 + 3 : 0) + (tn ? 8 + tnLines * 4.2 + 3 : 0) + (photos.length * 92) + 4;
       ensureSpace(14 + Math.min(bodyH, 80));
 
       // Header bar
@@ -665,13 +689,17 @@
         doc.text(lines, ML + 4, y);
         y += lines.length * 4.2 + 3;
       }
-      photos.forEach(src => {
-        ensureSpace(58);
+      photos.forEach(photo => {
+        const pBoxH = 92;
+        ensureSpace(pBoxH);
+        const pFit = fitBox(photo.w, photo.h, CW - 8, pBoxH - 4);
+        const pX = ML + 2 + (CW - 4 - pFit.w) / 2;
+        const pY = y + 2 + (pBoxH - 4 - pFit.h) / 2;
         doc.setDrawColor(224, 221, 216);
         doc.setLineWidth(0.25);
-        doc.rect(ML + 2, y + 1, CW - 4, 54);
-        try { doc.addImage(src, 'JPEG', ML + 3, y + 2, CW - 6, 52); } catch(e) {}
-        y += 58;
+        doc.rect(ML + 2, y + 1, CW - 4, pBoxH - 2);
+        try { doc.addImage(photo.src, 'JPEG', pX, pY, pFit.w, pFit.h); } catch(e) {}
+        y += pBoxH;
       });
 
       // Card border
