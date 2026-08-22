@@ -35,6 +35,19 @@
     .header img { height: 38px; width: auto; display: block; }
     .pdf-btn { font-size: 13px; padding: 8px 14px; border-radius: var(--radius-md); background: var(--text); color: var(--bg); border: none; font-family: inherit; cursor: pointer; font-weight: 500; white-space: nowrap; }
     .pdf-btn:active { opacity: 0.8; }
+.key-btn { font-size: 13px; padding: 8px 14px; border-radius: var(--radius-md); background: transparent; color: var(--text); border: 1px solid var(--border-strong); font-family: inherit; cursor: pointer; font-weight: 500; white-space: nowrap; }
+.key-btn:active { background: var(--bg-secondary); }
+.key-overlay { display: none; position: fixed; inset: 0; background: var(--bg-secondary); z-index: 1000; flex-direction: column; }
+.key-overlay-header { background: var(--bg-secondary); border-bottom: 0.5px solid var(--border); padding: 10px 16px; position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 10px; }
+.key-overlay-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.key-close-btn { font-size: 13px; padding: 8px 14px; border-radius: var(--radius-md); background: var(--text); color: var(--bg); border: none; font-family: inherit; cursor: pointer; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+.key-close-btn:active { opacity: 0.8; }
+.key-overlay-body { padding: 1rem; max-width: 520px; margin: 0 auto; width: 100%; overflow-y: auto; flex: 1; }
+.key-item-name { font-weight: 600; font-size: 15px; color: var(--text); }
+.key-item-price { font-size: 12px; color: var(--text-tertiary); font-style: italic; white-space: nowrap; }
+.key-item-desc { font-size: 14px; line-height: 1.5; margin-top: 6px; color: var(--text-secondary); }
+.key-item-bullets { margin: 8px 0 0 18px; padding: 0; font-size: 14px; line-height: 1.6; color: var(--text-secondary); }
+.key-intro { font-size: 13px; line-height: 1.5; color: var(--text-tertiary); margin-bottom: 14px; }
 
     .app { padding: 1rem; max-width: 520px; margin: 0 auto; }
     .section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--label-strong); margin-bottom: 6px; }
@@ -125,7 +138,10 @@
 <!-- ── SCREEN APP ── -->
 <div class="header">
   <img id="header-logo" alt="Tactical Wildlife Control" />
-  <button class="pdf-btn" onclick="exportPDF()">&#128196; Export PDF</button>
+  <div style="display:flex; gap:8px; align-items:center;">
+    <button class="key-btn" onclick="openKey()">&#128214; Key</button>
+    <button class="pdf-btn" onclick="exportPDF()">&#128196; Export PDF</button>
+  </div>
 </div>
 
 <div class="app">
@@ -179,6 +195,14 @@
 
 </div>
 
+<div class="key-overlay" id="key-overlay">
+  <div class="key-overlay-header">
+    <span class="key-overlay-title">&#128214; Line Item Reference Key</span>
+    <button class="key-close-btn" onclick="closeKey()">&#10003; Back to quote</button>
+  </div>
+  <div class="key-overlay-body" id="key-overlay-body"></div>
+</div>
+
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
@@ -220,6 +244,75 @@
     { name: 'Spot Sealing at Heights – Level 2 (4-7 pts)', price: 350, hint: '', unit: 'ea', cat: 'Roof/Heights' },
     { name: 'Spot Sealing at Heights – Level 3 (8+ pts)', price: 500, hint: '', unit: 'ea', cat: 'Roof/Heights' },
   ];
+
+const KEY_CONTENT = [
+  { cat: 'Ground / Low Height', items: [
+    { name: 'Side Seal Shields', price: '$250/pair', desc: 'Rigid shields fitted to the vertical sides of a garage door track, closing the gap where the door meets the frame that weatherstripping alone doesn\u2019t cover. Common raccoon/rat entry point at the door corners.' },
+    { name: 'Fill Fabric Corner Caps', price: '$30/ea', desc: 'Pre-formed caps that close the open corner where fill fabric wraps a foundation or siding corner \u2014 without a cap, the corner is left open even after the fabric run is installed.' },
+    { name: 'Fill Fabric Siding', price: '$9/LF', desc: 'Mesh fabric installed behind or over siding panels to block the gap between siding and wall sheathing \u2014 a common squirrel and rodent entry route along a wall line.' },
+    { name: 'Rodent Shield', price: '$23/LF', desc: 'Pre-fabricated, heavy-duty steel product installed along the foundation of the home \u2014 stops rodents from climbing, digging, or gnawing through at the foundation line. Not sheet metal flashing; a purpose-built product.' },
+    { name: 'Underground Fencing \u2013 Hardware Cloth', price: '$37/LF', desc: 'Galvanized wire mesh buried around the perimeter of a deck, porch, or shed to stop digging animals (groundhogs, skunks, rabbits) from tunneling underneath.' },
+    { name: 'Underground Fencing \u2013 LVG/Pest Blok', price: '$52/LF', desc: 'The premium version of underground fencing above \u2014 same purpose, but rigid LVG or Pest Blok board in place of wire mesh, for a much stronger, cleaner-finished look.' },
+    { name: 'Spot Sealing Ground Level \u2013 Level 1 / 2 / 3', price: '$150 / $250 / $375 flat', desc: 'Flat-rate option for sealing multiple small ground-level penetrations in one visit \u2014 pipe entries, wire entries, AC line penetrations, gaps around utility boxes, etc. \u2014 priced by how many points need sealing rather than itemizing each one.', bullets: ['Level 1: 1\u20133 points', 'Level 2: 4\u20137 points', 'Level 3: 8+ points'] },
+  ]},
+  { cat: 'Roof / Heights', items: [
+    { name: 'Ridge Guard', price: '$28\u201335/LF', desc: 'Barrier strip installed along the roof ridge line to block squirrels and raccoons from forcing their way in at the ridge cap or ridge vent.' },
+    { name: 'Gable Vent LVG', price: '$375/ea', desc: 'Custom-fabricated gable vent cover \u2014 cut to size from LVG with trim for a finished look, rather than an off-the-shelf cover.' },
+    { name: 'Soffit Return', price: '$315/ea', desc: 'General protection/exclusion of the soffit-to-fascia area at the end of an eave \u2014 a common chew-through point for squirrels. It may be boxed in or inset depending on the structure; the specifics vary job to job, but the return needs to be excluded.' },
+    { name: 'Fascia Reinforcement', price: '$315/ea', desc: 'Repairing or reinforcing fascia board that\u2019s been chewed through or damaged, closing the gap and hardening it against re-entry.' },
+    { name: 'Solar Panel Fencing', price: '$28\u201335/LF', desc: 'LVG or Pest Blok bent to the shape of the panels and installed around the perimeter \u2014 not mesh \u2014 to stop birds and rodents from nesting underneath.' },
+    { name: 'Spot Sealing at Heights \u2013 Level 1 / 2 / 3', price: '$225 / $350 / $500 flat', desc: 'Flat-rate option for sealing multiple small penetration points that require ladder or roof access in one visit \u2014 soffit, fascia, and flashing contact points, etc. \u2014 priced by how many points need sealing rather than itemizing each one.', bullets: ['Level 1: 1\u20133 points', 'Level 2: 4\u20137 points', 'Level 3: 8+ points'] },
+  ]},
+  { cat: 'LVG or Pest Blok: Custom', intro: 'Rigid, rodent-proof board stock (LVG or Pest Blok) custom cut and fit to close larger gaps and openings that mesh or fabric won\u2019t hold up to. All four tiers below are the same material \u2014 the price difference is access difficulty, not the product:', bullets: ['Easy Access (1 story) \u2014 $22/SF', 'Standard/Tougher Cuts \u2014 $24/SF', '2nd Story/Roofline \u2014 $28/SF', 'Peak/Roof Walk/Heavy Ladder \u2014 $32/SF'] },
+];
+
+const KEY_INTRO = 'Explains what\u2019s included for line items where the name alone isn\u2019t enough \u2014 with examples. Self-explanatory items (Box Vent, Power Vent, Hooded Vent, Dryer/Bathroom Vent Cover, Gutter Cleaning, Gutter Guard, Bird Nest Removal, Garage Door Seals) are left out on purpose.';
+
+function escKeyHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderKeyContent() {
+  const body = document.getElementById('key-overlay-body');
+  if (!body) return;
+  let html = '<p class="key-intro">' + escKeyHtml(KEY_INTRO) + '</p>';
+  KEY_CONTENT.forEach(function(cat) {
+    html += '<p class="section-label" style="margin-top:18px;">' + escKeyHtml(cat.cat) + '</p>';
+    if (cat.intro) {
+      html += '<div class="card" style="margin-bottom:10px;"><p class="key-item-desc" style="margin-top:0;">' + escKeyHtml(cat.intro) + '</p>';
+      if (cat.bullets) {
+        html += '<ul class="key-item-bullets">' + cat.bullets.map(function(b){ return '<li>' + escKeyHtml(b) + '</li>'; }).join('') + '</ul>';
+      }
+      html += '</div>';
+    }
+    if (cat.items) {
+      cat.items.forEach(function(it) {
+        html += '<div class="card" style="margin-bottom:10px;">' +
+          '<div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:6px;">' +
+            '<span class="key-item-name">' + escKeyHtml(it.name) + '</span>' +
+            '<span class="key-item-price">' + escKeyHtml(it.price) + '</span>' +
+          '</div>' +
+          '<p class="key-item-desc">' + escKeyHtml(it.desc) + '</p>';
+        if (it.bullets) {
+          html += '<ul class="key-item-bullets">' + it.bullets.map(function(b){ return '<li>' + escKeyHtml(b) + '</li>'; }).join('') + '</ul>';
+        }
+        html += '</div>';
+      });
+    }
+  });
+  body.innerHTML = html;
+}
+
+function openKey() {
+  renderKeyContent();
+  document.getElementById('key-overlay').style.display = 'flex';
+}
+
+function closeKey() {
+  document.getElementById('key-overlay').style.display = 'none';
+}
+
+
 
   function handleDescInput(id, value) {
     const item = items.find(i => i.id === id);
