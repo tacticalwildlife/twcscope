@@ -1,4 +1,4 @@
-const CACHE = 'twc-scope-v37';
+const CACHE = 'twc-scope-v38';
 const ASSETS = [
   './',
   './index.html',
