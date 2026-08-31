@@ -166,7 +166,8 @@
 
     <div style="margin-bottom:12px;">
     <p class="section-label">Schedule</p>
-    <div class="card" style="margin-bottom:8px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+    <div class="card">
       <p style="font-size:11px;font-weight:600;color:var(--label-strong);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">Phase 1</p>
       <div style="margin-bottom:8px;"><div class="field-label">Estimated hours</div><div class="labor-input-wrap"><input type="number" id="p1-hours" placeholder="0" min="0" step="0.5" oninput="updateLaborTime()" /><span class="labor-unit">hrs</span></div></div>
       <div class="notes-toggle-wrap">
@@ -175,12 +176,13 @@
       </div>
     </div>
     <div class="card">
-      <p style="font-size:11px;font-weight:600;color:var(--label-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">Phase 2 <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;">(Eviction jobs only)</span></p>
+      <p style="font-size:11px;font-weight:600;color:var(--label-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">Phase 2</p>
       <div style="margin-bottom:8px;"><div class="field-label">Estimated hours</div><div class="labor-input-wrap"><input type="number" id="p2-hours" placeholder="0" min="0" step="0.5" oninput="updateLaborTime()" /><span class="labor-unit">hrs</span></div></div>
       <div class="notes-toggle-wrap">
         <button type="button" class="notes-toggle-label" onclick="toggleNotes('p2')"><span class="notes-toggle-arrow" id="p2-notes-arrow">&#9656;</span> Notes for tech <span style="color:var(--text-tertiary)">(optional)</span><span class="notes-dot" id="p2-notes-dot"></span></button>
         <div class="notes-toggle-body" id="p2-notes-wrap" style="display:none;"><input type="text" id="p2-notes" placeholder="e.g. close off entry points, remove traps" oninput="updateLaborTime()" /></div>
       </div>
+    </div>
     </div>
   </div>
 
@@ -259,6 +261,11 @@
   // ── Price List ──
   const PRICE_LIST = [
     { name: 'Bird Nest Removal', price: null, hint: '$650–$1,200', unit: 'ea', cat: 'Services' },
+    { name: 'OWD (One Way Door)', price: null, hint: '', unit: 'ea', cat: 'Services' },
+    { name: 'OWDR (One Way Door Removal)', price: null, hint: '', unit: 'ea', cat: 'Services' },
+    { name: 'DSV', price: null, hint: '', unit: 'ea', cat: 'Services' },
+    { name: 'Spot Contamination Cleanup', price: null, hint: '', unit: 'ea', cat: 'Services' },
+    { name: 'Spot Insulation Cleanup/Replacement', price: null, hint: '', unit: 'ea', cat: 'Services' },
     { name: "16' Garage Door Seal", price: 500, hint: '', unit: 'ea', cat: 'Ground/Low Height' },
     { name: "8/9' Garage Door Seal", price: 300, hint: '', unit: 'ea', cat: 'Ground/Low Height' },
     { name: 'Side Seal Shields', price: 250, hint: '', unit: 'pair', cat: 'Ground/Low Height' },
@@ -663,15 +670,16 @@ function closeKey() {
     if (hasPhase2) {
       customerLines = [];
       if (phase1Customer.length) { customerLines.push('PHASE 1', ''); customerLines.push(...phase1Customer); }
-      if (phase2Customer.length) { if (customerLines.length) customerLines.push(''); customerLines.push('PHASE 2 (EVICTION)', ''); customerLines.push(...phase2Customer); }
+      if (phase2Customer.length) { if (customerLines.length) customerLines.push(''); customerLines.push('PHASE 2', ''); customerLines.push(...phase2Customer); }
     } else {
       customerLines = phase1Customer;
     }
     document.getElementById('output-customer').value = customerLines.join('\n');
     let techLines = ['JOB SCOPE\n'];
     if (hasPhase2) {
-      if (phase1Tech.length) { techLines.push('PHASE 1'); techLines.push(...phase1Tech); }
-      if (phase2Tech.length) { techLines.push('PHASE 2 (EVICTION)'); techLines.push(...phase2Tech); }
+      let techHasP1 = false;
+      if (phase1Tech.length) { techLines.push('PHASE 1', ''); techLines.push(...phase1Tech); techHasP1 = true; }
+      if (phase2Tech.length) { if (techHasP1) techLines.push(''); techLines.push('PHASE 2', ''); techLines.push(...phase2Tech); }
     } else {
       techLines.push(...phase1Tech);
     }
