@@ -131,6 +131,11 @@
     .line-total-label { font-size: 11px; color: var(--label-muted); margin-right: 6px; }
     .line-total-amount { font-size: 14px; font-weight: 600; color: var(--text); }
     .line-total-amount.zero { color: var(--label-muted); font-weight: 400; }
+    .labor-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .labor-input-wrap { display: flex; align-items: center; gap: 6px; }
+    .labor-input-wrap input { flex: 1; }
+    .labor-unit { font-size: 13px; color: var(--label-muted); white-space: nowrap; }
+
 </style>
 </head>
 <body>
@@ -151,7 +156,27 @@
     <input type="text" id="customer-name" placeholder="Customer name" style="font-size:16px; font-weight:500;" />
   </div>
 
-  <div class="card" style="margin-bottom:14px;">
+    <div style="margin-bottom:12px;">
+    <p class="section-label">Schedule</p>
+    <div class="card" style="margin-bottom:8px;">
+      <p style="font-size:11px;font-weight:600;color:var(--label-strong);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">Phase 1</p>
+      <div class="labor-row">
+        <div><div class="field-label">Estimated hours</div><div class="labor-input-wrap"><input type="number" id="p1-hours" placeholder="0" min="0" step="0.5" oninput="updateLaborTime()" /><span class="labor-unit">hrs</span></div></div>
+        <div><div class="field-label">Crew size</div><div class="labor-input-wrap"><input type="number" id="p1-crew" placeholder="1" min="1" step="1" oninput="updateLaborTime()" /><span class="labor-unit">people</span></div></div>
+      </div>
+      <div><div class="field-label">Notes for tech <span style="color:var(--text-tertiary)">(optional)</span></div><input type="text" id="p1-notes" placeholder="e.g. bring 32ft ladder, access through side gate" oninput="updateLaborTime()" /></div>
+    </div>
+    <div class="card">
+      <p style="font-size:11px;font-weight:600;color:var(--label-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">Phase 2 <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;">(Eviction jobs only)</span></p>
+      <div class="labor-row">
+        <div><div class="field-label">Estimated hours</div><div class="labor-input-wrap"><input type="number" id="p2-hours" placeholder="0" min="0" step="0.5" oninput="updateLaborTime()" /><span class="labor-unit">hrs</span></div></div>
+        <div><div class="field-label">Crew size</div><div class="labor-input-wrap"><input type="number" id="p2-crew" placeholder="1" min="1" step="1" oninput="updateLaborTime()" /><span class="labor-unit">people</span></div></div>
+      </div>
+      <div><div class="field-label">Notes for tech <span style="color:var(--text-tertiary)">(optional)</span></div><input type="text" id="p2-notes" placeholder="e.g. close off entry points, remove traps" oninput="updateLaborTime()" /></div>
+    </div>
+  </div>
+
+<div class="card" style="margin-bottom:14px;">
     <p class="section-label" style="margin-bottom:8px;">Upload Graph</p>
     <div id="graph-area">
       <label class="photo-add-btn">
@@ -384,6 +409,31 @@ function closeKey() {
   document.addEventListener('click', e => {
     if (!e.target.closest('.price-combo')) closePriceDropdowns();
   });
+  function getLaborBlock() {
+    const p1h = parseFloat(document.getElementById('p1-hours')?.value) || 0;
+    const p1c = parseInt(document.getElementById('p1-crew')?.value) || 1;
+    const p1n = (document.getElementById('p1-notes')?.value || '').trim();
+    const p2h = parseFloat(document.getElementById('p2-hours')?.value) || 0;
+    const p2c = parseInt(document.getElementById('p2-crew')?.value) || 1;
+    const p2n = (document.getElementById('p2-notes')?.value || '').trim();
+    const hasP1 = p1h > 0 || p1n, hasP2 = p2h > 0 || p2n;
+    if (!hasP1 && !hasP2) return '';
+    let block = '';
+    if (hasP1) {
+      block += '--- PHASE 1 ---';
+      if (p1h) block += '\nEstimated time: ' + p1h + ' hr' + (p1h !== 1 ? 's' : '') + (p1c > 1 ? ' × ' + p1c + ' person crew' : '');
+      if (p1n) block += '\nNotes: ' + p1n;
+    }
+    if (hasP2) {
+      if (block) block += '\n\n';
+      block += '--- PHASE 2 ---';
+      if (p2h) block += '\nEstimated time: ' + p2h + ' hr' + (p2h !== 1 ? 's' : '') + (p2c > 1 ? ' × ' + p2c + ' person crew' : '');
+      if (p2n) block += '\nNotes: ' + p2n;
+    }
+    return block;
+  }
+  function updateLaborTime() { updateOutputs(); }
+
 
   function updateLineTotal(id) {
     const item = items.find(i => i.id === id);
@@ -583,6 +633,8 @@ function closeKey() {
       }
     });
     document.getElementById('output-customer').value = customerLines.join('\n');
+        const laborBlock = getLaborBlock();
+    if (laborBlock) techLines.push('\n' + laborBlock);
     document.getElementById('output-tech').value = techLines.join('\n');
     document.getElementById('total-display').textContent = '$' + total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
     const warranty = total > 0 ? Math.max(total * 0.10, 300) : 0;
