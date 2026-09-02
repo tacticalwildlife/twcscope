@@ -705,6 +705,11 @@ function closeKey() {
   // ── PDF Export via jsPDF ──
   function exportPDF() {
     if (!window.jspdf) { alert('PDF library not loaded — check connection and try again.'); return; }
+    buildPdfDoc(false);
+    buildPdfDoc(true);
+  }
+
+  function buildPdfDoc(includePrices) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const PW = 210, PH = 297, ML = 14, MR = 14;
@@ -731,7 +736,7 @@ function closeKey() {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(160, 160, 158);
-    doc.text('For technician use only', PW - MR, 15, { align: 'right' });
+    doc.text(includePrices ? 'Internal use — includes pricing' : 'For technician use only', PW - MR, 15, { align: 'right' });
     doc.text('Keep with job at all times', PW - MR, 19.5, { align: 'right' });
     y = 24;
 
@@ -815,6 +820,16 @@ function closeKey() {
       const mat = (item.material||'').trim();
       const tn = (item.techNotes||'').trim();
       const photos = item.photos || [];
+      let priceStr = '';
+      if (includePrices && !isNote) {
+        const priceNum = parseFloat(item.price);
+        const qtyNum = parseFloat(item.qty) || 1;
+        if (!isNaN(priceNum)) {
+          priceStr = '$' + (priceNum * qtyNum).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+        } else if (item._priceHint) {
+          priceStr = item._priceHint;
+        }
+      }
 
       // Estimate height
       const matLines = mat ? doc.splitTextToSize(mat, CW - 8).length : 0;
@@ -847,6 +862,12 @@ function closeKey() {
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(isNote ? 140 : 100, isNote ? 100 : 100, 100);
         doc.text(qty || 'For technician reference only', ML + 16, y + 11.5);
+      }
+      if (priceStr) {
+        doc.setFontSize(10.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(26, 26, 26);
+        doc.text(priceStr, ML + CW - 4, y + 7.5, { align: 'right' });
       }
       y += 13;
 
@@ -912,8 +933,35 @@ function closeKey() {
       }
     });
 
+    if (includePrices) {
+      let grandTotal = 0;
+      validItems.forEach(item => {
+        const priceNum = parseFloat(item.price);
+        const qtyNum = parseFloat(item.qty) || 1;
+        if (!isNaN(priceNum)) grandTotal += priceNum * qtyNum;
+      });
+      const warranty = grandTotal > 0 ? Math.max(grandTotal * 0.10, 300) : 0;
+      ensureSpace(20);
+      doc.setDrawColor(220, 218, 214);
+      doc.setLineWidth(0.25);
+      doc.line(ML, y, ML + CW, y);
+      y += 6;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(26, 26, 26);
+      doc.text('TOTAL', ML, y + 4);
+      doc.text('$' + grandTotal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}), ML + CW, y + 4, { align: 'right' });
+      y += 8;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Annual warranty (10%, $300 min)', ML, y + 4);
+      doc.text('$' + warranty.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}), ML + CW, y + 4, { align: 'right' });
+      y += 8;
+    }
+
     addFooter();
-    const fname = (customerName !== 'Customer' ? customerName.replace(/[^a-z0-9]/gi,'_') : 'TWC') + '_Job_Scope.pdf';
+    const fname = (customerName !== 'Customer' ? customerName.replace(/[^a-z0-9]/gi,'_') : 'TWC') + (includePrices ? '_Job_Scope_Priced.pdf' : '_Job_Scope.pdf');
     // iOS Safari: open as blob URL so share sheet appears (Save to Files / Jobber)
     // Desktop: triggers normal file download
     const blob = doc.output('blob');
