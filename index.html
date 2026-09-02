@@ -270,11 +270,11 @@
   // ── Price List ──
   const PRICE_LIST = [
     { name: 'Bird Nest Removal', price: null, hint: '$650–$1,200', unit: 'ea', cat: 'Services' },
-    { name: 'OWD (One Way Door)', price: null, hint: '', unit: 'ea', cat: 'Services' },
-    { name: 'OWDR (One Way Door Removal) & Re-Inspect', price: null, hint: '', unit: 'ea', cat: 'Services' },
-    { name: 'DSV', price: null, hint: '', unit: 'ea', cat: 'Services' },
-    { name: 'Spot Contamination Cleanup', price: null, hint: '', unit: 'ea', cat: 'Services' },
-    { name: 'Spot Insulation Cleanup/Replacement', price: null, hint: '', unit: 'ea', cat: 'Services' },
+    { name: 'OWD (One Way Door)', price: null, hint: '', unit: 'ea', cat: 'Services', defaultPhase: '2' },
+    { name: 'OWDR (One Way Door Removal) & Re-Inspect', price: null, hint: '', unit: 'ea', cat: 'Services', defaultPhase: '2' },
+    { name: 'DSV', price: null, hint: '', unit: 'ea', cat: 'Services', defaultPhase: '2' },
+    { name: 'Spot Contamination Cleanup', price: null, hint: '', unit: 'ea', cat: 'Services', defaultPhase: '2' },
+    { name: 'Spot Insulation Cleanup/Replacement', price: null, hint: '', unit: 'ea', cat: 'Services', defaultPhase: '2' },
     { name: "16' Garage Door Seal", price: 500, hint: '', unit: 'ea', cat: 'Ground/Low Height' },
     { name: "8/9' Garage Door Seal", price: 300, hint: '', unit: 'ea', cat: 'Ground/Low Height' },
     { name: 'Side Seal Shields', price: 250, hint: '', unit: 'pair', cat: 'Ground/Low Height' },
@@ -422,6 +422,7 @@ function closeKey() {
     item.unit = match.unit;
     item.price = match.price !== null ? match.price : '';
     item._priceHint = match.hint || '';
+    item.phase = match.defaultPhase || '1';
     closePriceDropdowns();
     renderItems();
   }
