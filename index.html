@@ -154,7 +154,6 @@
   <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
     <button class="key-btn" onclick="openJobs()">&#128193; Jobs</button>
     <button class="key-btn" onclick="openKey()">&#128214; Key</button>
-    <button class="pdf-btn" onclick="exportPDF()">&#128196; Export PDF</button>
   </div>
 </div>
 
@@ -216,7 +215,10 @@
   <div class="card">
     <div class="output-header">
       <span class="tag tag-customer">Customer — General Exclusion</span>
-      <button class="copy-btn" id="copy-customer" onclick="copyOutput('customer')">Copy</button>
+      <div style="display:flex; gap:6px;">
+        <button class="copy-btn" id="copy-customer" onclick="copyOutput('customer')">Copy</button>
+        <button class="copy-btn" id="pdf-customer" onclick="buildPdfDoc(false)">&#128196; Export</button>
+      </div>
     </div>
     <textarea id="output-customer" readonly></textarea>
   </div>
@@ -224,7 +226,10 @@
   <div class="card">
     <div class="output-header">
       <span class="tag tag-tech">Tech scope — private notes</span>
-      <button class="copy-btn" id="copy-tech" onclick="copyOutput('tech')">Copy</button>
+      <div style="display:flex; gap:6px;">
+        <button class="copy-btn" id="copy-tech" onclick="copyOutput('tech')">Copy</button>
+        <button class="copy-btn" id="pdf-tech" onclick="buildPdfDoc(true)">&#128196; Export</button>
+      </div>
     </div>
     <textarea id="output-tech" readonly style="min-height:100px;"></textarea>
   </div>
@@ -906,13 +911,8 @@ function closeKey() {
   }
 
   // ── PDF Export via jsPDF ──
-  function exportPDF() {
-    if (!window.jspdf) { alert('PDF library not loaded — check connection and try again.'); return; }
-    buildPdfDoc(false);
-    buildPdfDoc(true);
-  }
-
   function buildPdfDoc(includePrices) {
+    if (!window.jspdf) { alert('PDF library not loaded — check connection and try again.'); return; }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const PW = 210, PH = 297, ML = 14, MR = 14;
