@@ -881,6 +881,9 @@ function closeKey() {
     } else {
       customerLines = phase1Customer;
     }
+    if (items.some(item => /underground fencing/i.test(item.desc || ''))) {
+      customerLines.push('', "Please note: Underground fencing requires trenching and digging around the structure. Any plants or vegetation within 2' of the area may experience root damage or be destroyed.");
+    }
     document.getElementById('output-customer').value = customerLines.join('\n');
     let techLines = ['JOB SCOPE\n'];
     if (hasPhase2) {
