@@ -123,6 +123,13 @@
     .price-option:last-child { border-bottom: none; }
     .price-option:active { background: var(--bg-secondary); }
     .price-option-price { font-size: 11px; color: var(--label-muted); white-space: nowrap; margin-left: 8px; }
+    .price-combo-arrow {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      width: 22px; height: 22px; padding: 0; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text-secondary); border: none; background: transparent;
+      font-size: 13px; border-radius: 4px;
+    }
+    .price-combo-arrow:active { background: var(--bg-secondary); }
 
     .line-total-bar {
       display: flex; justify-content: flex-end; align-items: center;
@@ -277,7 +284,7 @@
     { name: 'Bird Nest Removal', price: null, hint: '$650–$1,200', unit: 'ea', cat: 'Services' },
     { name: 'OWD (One Way Door)', price: 755, hint: '', unit: 'ea', cat: 'Services' },
     { name: 'OWDR (One Way Door Removal) & Re-Inspect', price: null, hint: '', unit: 'ea', cat: 'Services', defaultPhase: '2' },
-    { name: 'Bio-Contamination & Odor Treatment', price: null, hint: '', unit: 'ea', cat: 'Services', defaultPhase: '2' },
+    { name: 'Bio-Contamination & Odor Treatment', price: null, hint: '', unit: 'ea', cat: 'Services', defaultPhase: '2', searchAlias: 'DSV' },
     { name: 'Spot Contamination Cleanup', price: null, hint: '', unit: 'ea', cat: 'Services', defaultPhase: '2' },
     { name: 'Spot Insulation Cleanup/Replacement', price: null, hint: '', unit: 'ea', cat: 'Services', defaultPhase: '2' },
     { name: "16' Garage Door Seal", price: 500, hint: '', unit: 'ea', cat: 'Ground/Low Height' },
@@ -391,30 +398,46 @@ function closeKey() {
     showPriceDropdown(id, value);
   }
 
-  function showPriceDropdown(id, query) {
-    const dd = document.getElementById('pd-' + id);
-    if (!dd) return;
-    if (!query || query.length < 1) { dd.classList.remove('open'); return; }
-    const q = query.toLowerCase();
-    const matches = PRICE_LIST.filter(p => p.name.toLowerCase().includes(q));
-    if (!matches.length) { dd.classList.remove('open'); return; }
-
-    // Group by category
+  function priceOptionsHTML(id, list) {
     const cats = {};
-    matches.forEach(p => { if (!cats[p.cat]) cats[p.cat] = []; cats[p.cat].push(p); });
-
+    list.forEach(p => { if (!cats[p.cat]) cats[p.cat] = []; cats[p.cat].push(p); });
     let html2 = '';
     Object.entries(cats).forEach(([cat, items2]) => {
       html2 += '<div class="price-cat-label">' + cat + '</div>';
       items2.forEach(p => {
         const priceStr = p.price !== null ? ('$' + p.price + '/' + p.unit) : (p.hint || 'Enter price');
+        const aliasStr = p.searchAlias ? ' <span style="color:var(--label-muted);font-weight:400;">(' + p.searchAlias + ')</span>' : '';
         html2 += '<div class="price-option" onclick="selectPrice(' + id + ',' + JSON.stringify(p.name).replace(/"/g,'&quot;') + ')">' +
-          '<span>' + p.name + '</span>' +
+          '<span>' + p.name + aliasStr + '</span>' +
           '<span class="price-option-price">' + priceStr + '</span>' +
           '</div>';
       });
     });
-    dd.innerHTML = html2;
+    return html2;
+  }
+
+  function showPriceDropdown(id, query) {
+    const dd = document.getElementById('pd-' + id);
+    if (!dd) return;
+    if (!query || query.length < 1) { dd.classList.remove('open'); dd.dataset.allOpen = ''; return; }
+    const q = query.toLowerCase();
+    const matches = PRICE_LIST.filter(p => p.name.toLowerCase().includes(q) || (p.searchAlias && p.searchAlias.toLowerCase().includes(q)));
+    if (!matches.length) { dd.classList.remove('open'); dd.dataset.allOpen = ''; return; }
+    dd.innerHTML = priceOptionsHTML(id, matches);
+    dd.dataset.allOpen = '';
+    dd.classList.add('open');
+  }
+
+  function toggleAllPriceOptions(id) {
+    const dd = document.getElementById('pd-' + id);
+    if (!dd) return;
+    if (dd.classList.contains('open') && dd.dataset.allOpen === '1') {
+      dd.classList.remove('open');
+      dd.dataset.allOpen = '';
+      return;
+    }
+    dd.innerHTML = priceOptionsHTML(id, PRICE_LIST);
+    dd.dataset.allOpen = '1';
     dd.classList.add('open');
   }
 
@@ -440,7 +463,7 @@ function closeKey() {
   }
 
   function closePriceDropdowns() {
-    document.querySelectorAll('.price-dropdown').forEach(d => d.classList.remove('open'));
+    document.querySelectorAll('.price-dropdown').forEach(d => { d.classList.remove('open'); d.dataset.allOpen = ''; });
   }
 
   // Close dropdowns when tapping outside
@@ -818,7 +841,7 @@ function closeKey() {
             '<button class="remove-btn" onclick="removeItem(' + item.id + ')">&#215;</button>' +
           '</div>' +
           '<div class="row3">' +
-            '<div><div class="field-label">Description</div><div class="price-combo"> <input type="text" placeholder="Search or type item..." value="' + (item.desc||'') + '"  oninput="handleDescInput(' + item.id + ',this.value)" onfocus="showPriceDropdown(' + item.id + ',this.value)" autocomplete="off" /> <div class="price-dropdown" id="pd-' + item.id + '"></div> </div></div>' +
+            '<div><div class="field-label">Description</div><div class="price-combo"> <input type="text" style="padding-right:30px;" placeholder="Search or type item..." value="' + (item.desc||'') + '"  oninput="handleDescInput(' + item.id + ',this.value)" onfocus="showPriceDropdown(' + item.id + ',this.value)" autocomplete="off" /> <button type="button" class="price-combo-arrow" onclick="toggleAllPriceOptions(' + item.id + ')" aria-label="Browse all items">&#9662;</button> <div class="price-dropdown" id="pd-' + item.id + '"></div> </div></div>' +
             '<div><div class="field-label">Qty</div><input type="number" placeholder="1" min="0" value="' + (item.qty||'') + '" oninput="updateItem(' + item.id + ',\'qty\',this.value);updateLineTotal(' + item.id + ')"/></div>' +
             '<div><div class="field-label">Unit</div><select onchange="updateItem(' + item.id + ',\'unit\',this.value)">' + UNITS.map(u => '<option' + (u===item.unit?' selected':'') + '>' + u + '</option>').join('') + '</select></div>' +
           '</div>' +
