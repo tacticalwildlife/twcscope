@@ -275,7 +275,7 @@
   // ── Price List ──
   const PRICE_LIST = [
     { name: 'Bird Nest Removal', price: null, hint: '$650–$1,200', unit: 'ea', cat: 'Services' },
-    { name: 'OWD (One Way Door)', price: null, hint: '', unit: 'ea', cat: 'Services' },
+    { name: 'OWD (One Way Door)', price: 755, hint: '', unit: 'ea', cat: 'Services' },
     { name: 'OWDR (One Way Door Removal) & Re-Inspect', price: null, hint: '', unit: 'ea', cat: 'Services', defaultPhase: '2' },
     { name: 'DSV', price: null, hint: '', unit: 'ea', cat: 'Services', defaultPhase: '2' },
     { name: 'Spot Contamination Cleanup', price: null, hint: '', unit: 'ea', cat: 'Services', defaultPhase: '2' },
@@ -428,6 +428,13 @@ function closeKey() {
     item.price = match.price !== null ? match.price : '';
     item._priceHint = match.hint || '';
     item.phase = match.defaultPhase || '1';
+    if (match.name === 'OWD (One Way Door)' && !items.some(i => i.desc === 'OWDR (One Way Door Removal) & Re-Inspect')) {
+      const owdrMatch = PRICE_LIST.find(p => p.name === 'OWDR (One Way Door Removal) & Re-Inspect');
+      if (owdrMatch) {
+        const owdrItem = { type:'item', id:nextId++, phase: owdrMatch.defaultPhase || '1', qty:'', unit: owdrMatch.unit, desc: owdrMatch.name, price: owdrMatch.price !== null ? owdrMatch.price : '', material:'', techNotes:'', photos:[], _priceHint: owdrMatch.hint || '' };
+        items.splice(items.indexOf(item) + 1, 0, owdrItem);
+      }
+    }
     closePriceDropdowns();
     renderItems();
   }
