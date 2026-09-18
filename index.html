@@ -304,8 +304,10 @@
     { name: 'Box Vent (Roof)', price: 250, hint: '', unit: 'ea', cat: 'Roof/Heights' },
     { name: 'Gable Vent LVG', price: 375, hint: '', unit: 'ea', cat: 'Roof/Heights' },
     { name: 'Hooded Vent', price: 150, hint: '', unit: 'ea', cat: 'Roof/Heights' },
-    { name: 'Soffit Return', price: 315, hint: '', unit: 'ea', cat: 'Roof/Heights' },
-    { name: 'Fascia Reinforcement', price: 315, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Soffit Return – Unpainted (White Metal)', price: 315, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Soffit Return – Textured/Painted to Match', price: 390, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Fascia Reinforcement – Unpainted (White Metal)', price: 315, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Fascia Reinforcement – Textured/Painted to Match', price: 390, hint: '', unit: 'ea', cat: 'Roof/Heights' },
     { name: 'Solar Panel Fencing', price: null, hint: '$28–35', unit: 'LF', cat: 'Roof/Heights' },
     { name: 'Gutter Cleaning', price: 7, hint: '', unit: 'LF', cat: 'Gutters' },
     { name: 'Gutter Guard Install', price: null, hint: 'TBD', unit: 'LF', cat: 'Gutters' },
@@ -335,9 +337,9 @@ const KEY_CONTENT = [
   { cat: 'Roof / Heights', items: [
     { name: 'Ridge Guard', price: '$28\u201335/LF', desc: 'Barrier strip installed along the roof ridge line to block squirrels and raccoons from forcing their way in at the ridge cap or ridge vent.' },
     { name: 'Gable Vent LVG', price: '$375/ea', desc: 'Custom-fabricated gable vent cover \u2014 cut to size from LVG with trim for a finished look, rather than an off-the-shelf cover.' },
-    { name: 'Soffit Return', price: '$315/ea', desc: 'General protection/exclusion of the soffit-to-fascia area at the end of an eave \u2014 a common chew-through point for squirrels. It may be boxed in or inset depending on the structure; the specifics vary job to job, but the return needs to be excluded.' },
-    { name: 'Fascia Reinforcement', price: '$315/ea', desc: 'Repairing or reinforcing fascia board that\u2019s been chewed through or damaged, closing the gap and hardening it against re-entry.' },
-    { name: 'Solar Panel Fencing', price: '$28\u201335/LF', desc: 'LVG or Pest Blok bent to the shape of the panels and installed around the perimeter \u2014 not mesh \u2014 to stop birds and rodents from nesting underneath.' },
+{ name: 'Soffit Return', price: '$315–$390/ea', desc: 'General protection/exclusion of the soffit-to-fascia area at the end of an eave — a common chew-through point for squirrels. It may be boxed in or inset depending on the structure; the specifics vary job to job, but the return needs to be excluded. Two finish options:', bullets: ['Unpainted (White Metal) — $315/ea', 'Textured/Painted to Match — $390/ea (take a color-match sample on the Phase 1 visit)'] },
+    { name: 'Fascia Reinforcement', price: '$315–$390/ea', desc: 'Repairing or reinforcing fascia board that’s been chewed through or damaged, closing the gap and hardening it against re-entry. Two finish options:', bullets: ['Unpainted (White Metal) — $315/ea', 'Textured/Painted to Match — $390/ea (take a color-match sample on the Phase 1 visit)'] },
+        { name: 'Solar Panel Fencing', price: '$28\u201335/LF', desc: 'LVG or Pest Blok bent to the shape of the panels and installed around the perimeter \u2014 not mesh \u2014 to stop birds and rodents from nesting underneath.' },
     { name: 'Spot Sealing at Heights \u2013 Level 1 / 2 / 3', price: '$225 / $350 / $500 flat', desc: 'Flat-rate option for sealing multiple small penetration points that require ladder or roof access in one visit \u2014 soffit, fascia, and flashing contact points, etc. \u2014 priced by how many points need sealing rather than itemizing each one.', bullets: ['Level 1: 1\u20133 points', 'Level 2: 4\u20137 points', 'Level 3: 8+ points'] },
   ]},
   { cat: 'LVG or Pest Blok: Custom', intro: 'Rigid, rodent-proof board stock (LVG or Pest Blok) custom cut and fit to close larger gaps and openings that mesh or fabric won\u2019t hold up to. All four tiers below are the same material \u2014 the price difference is access difficulty, not the product:', bullets: ['Easy Access (1 story) \u2014 $22/SF', 'Standard/Tougher Cuts \u2014 $24/SF', '2nd Story/Roofline \u2014 $28/SF', 'Peak/Roof Walk/Heavy Ladder \u2014 $32/SF'] },
@@ -903,6 +905,11 @@ function closeKey() {
         techArr.push(tl);
       }
     });
+    const paintItems = items.filter(item => item.type !== 'note' && /textured\/painted to match/i.test((item.desc||'').trim()));
+    if (paintItems.length) {
+      const paintNames = [...new Set(paintItems.map(i => (i.desc||'').replace(/\s*[\u2013-]\s*Textured\/Painted to Match$/i, '').trim()))];
+      phase2Tech.unshift('\u2605 NOTE\n   Paint/texture match required: ' + paintNames.join(', ') + '\n   Take a material sample during the Phase 1 visit for color matching before Phase 2 fabrication/install.');
+    }
     const hasPhase2 = phase2Customer.length > 0 || phase2Tech.length > 0;
     let customerLines;
     if (hasPhase2) {
