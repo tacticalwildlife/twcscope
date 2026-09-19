@@ -302,7 +302,9 @@
     { name: 'Ridge Guard', price: null, hint: '$28–35/LF', unit: 'LF', cat: 'Roof/Heights' },
     { name: 'Power Vent', price: 250, hint: '', unit: 'ea', cat: 'Roof/Heights' },
     { name: 'Box Vent (Roof)', price: 250, hint: '', unit: 'ea', cat: 'Roof/Heights' },
-    { name: 'Gable Vent LVG', price: 375, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Gable Vent LVG – White', price: 375, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Gable Vent LVG – Black', price: 375, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Gable Vent LVG – Painted to Match', price: 490, hint: '', unit: 'ea', cat: 'Roof/Heights' },
     { name: 'Hooded Vent', price: 150, hint: '', unit: 'ea', cat: 'Roof/Heights' },
     { name: 'Soffit Return – Unpainted (White Metal)', price: 315, hint: '', unit: 'ea', cat: 'Roof/Heights' },
     { name: 'Soffit Return – Textured/Painted to Match', price: 390, hint: '', unit: 'ea', cat: 'Roof/Heights' },
@@ -336,7 +338,7 @@ const KEY_CONTENT = [
   ]},
   { cat: 'Roof / Heights', items: [
     { name: 'Ridge Guard', price: '$28\u201335/LF', desc: 'Barrier strip installed along the roof ridge line to block squirrels and raccoons from forcing their way in at the ridge cap or ridge vent.' },
-    { name: 'Gable Vent LVG', price: '$375/ea', desc: 'Custom-fabricated gable vent cover \u2014 cut to size from LVG with trim for a finished look, rather than an off-the-shelf cover.' },
+    { name: 'Gable Vent LVG', price: '$375\u2013$490/ea', desc: 'Custom-fabricated gable vent cover \u2014 cut to size from LVG with trim for a finished look, rather than an off-the-shelf cover. Stocked in white and black by default; can be painted to match for an extra fee (paint only, no texture): White or Black (default) \u2014 $375/ea. Painted to Match \u2014 $490/ea (+$115, take a color sample on the Phase 1 visit).' },
 { name: 'Soffit Return', price: '$315–$390/ea', desc: 'General protection/exclusion of the soffit-to-fascia area at the end of an eave — a common chew-through point for squirrels. It may be boxed in or inset depending on the structure; the specifics vary job to job, but the return needs to be excluded. Two finish options:', bullets: ['Unpainted (White Metal) — $315/ea', 'Textured/Painted to Match — $390/ea (take a color-match sample on the Phase 1 visit)'] },
     { name: 'Fascia Reinforcement', price: '$315–$390/ea', desc: 'Repairing or reinforcing fascia board that’s been chewed through or damaged, closing the gap and hardening it against re-entry. Two finish options:', bullets: ['Unpainted (White Metal) — $315/ea', 'Textured/Painted to Match — $390/ea (take a color-match sample on the Phase 1 visit)'] },
         { name: 'Solar Panel Fencing', price: '$28\u201335/LF', desc: 'LVG or Pest Blok bent to the shape of the panels and installed around the perimeter \u2014 not mesh \u2014 to stop birds and rodents from nesting underneath.' },
@@ -900,15 +902,15 @@ function closeKey() {
         const price = parseFloat(item.price), qty = parseFloat(item.qty) || 1;
         if (!isNaN(price)) total += price * qty;
         let tl = itemCount + '. ' + qtyStr + (item.unit !== 'ea' ? item.unit + ' ' : '') + desc;
-        if (/textured\/painted to match/i.test(desc)) tl += '\n   * Take paint sample';
+        if (/painted to match/i.test(desc)) tl += '\n   * Take paint sample';
         if (item.material) tl += '\n   Material: ' + item.material;
         if (item.techNotes) tl += '\n   Notes: ' + item.techNotes;
         techArr.push(tl);
       }
     });
-    const paintItems = items.filter(item => item.type !== 'note' && /textured\/painted to match/i.test((item.desc||'').trim()));
+    const paintItems = items.filter(item => item.type !== 'note' && /painted to match/i.test((item.desc||'').trim()));
     if (paintItems.length) {
-      const paintNames = [...new Set(paintItems.map(i => (i.desc||'').replace(/\s*[\u2013-]\s*Textured\/Painted to Match$/i, '').trim()))];
+      const paintNames = [...new Set(paintItems.map(i => (i.desc||'').replace(/\s*[\u2013-]\s*(?:Textured\/)?Painted to Match$/i, '').trim()))];
       phase2Tech.unshift('\u2605 NOTE\n   Paint/texture match required: ' + paintNames.join(', ') + '\n   Complete texture/paint match using the sample taken during the Phase 1 visit.');
     }
     const hasPhase2 = phase2Customer.length > 0 || phase2Tech.length > 0;
