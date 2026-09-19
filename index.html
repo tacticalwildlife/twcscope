@@ -900,6 +900,7 @@ function closeKey() {
         const price = parseFloat(item.price), qty = parseFloat(item.qty) || 1;
         if (!isNaN(price)) total += price * qty;
         let tl = itemCount + '. ' + qtyStr + (item.unit !== 'ea' ? item.unit + ' ' : '') + desc;
+        if (/textured\/painted to match/i.test(desc)) tl += '\n   * Take paint sample';
         if (item.material) tl += '\n   Material: ' + item.material;
         if (item.techNotes) tl += '\n   Notes: ' + item.techNotes;
         techArr.push(tl);
@@ -908,7 +909,7 @@ function closeKey() {
     const paintItems = items.filter(item => item.type !== 'note' && /textured\/painted to match/i.test((item.desc||'').trim()));
     if (paintItems.length) {
       const paintNames = [...new Set(paintItems.map(i => (i.desc||'').replace(/\s*[\u2013-]\s*Textured\/Painted to Match$/i, '').trim()))];
-      phase2Tech.unshift('\u2605 NOTE\n   Paint/texture match required: ' + paintNames.join(', ') + '\n   Take a material sample during the Phase 1 visit for color matching before Phase 2 fabrication/install.');
+      phase2Tech.unshift('\u2605 NOTE\n   Paint/texture match required: ' + paintNames.join(', ') + '\n   Complete texture/paint match using the sample taken during the Phase 1 visit.');
     }
     const hasPhase2 = phase2Customer.length > 0 || phase2Tech.length > 0;
     let customerLines;
