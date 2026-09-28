@@ -324,6 +324,10 @@
     { name: 'Spot Sealing at Heights – Level 1 (1-3 pts)', price: 225, hint: '', unit: 'ea', cat: 'Roof/Heights' },
     { name: 'Spot Sealing at Heights – Level 2 (4-7 pts)', price: 350, hint: '', unit: 'ea', cat: 'Roof/Heights' },
     { name: 'Spot Sealing at Heights – Level 3 (8+ pts)', price: 500, hint: '', unit: 'ea', cat: 'Roof/Heights' },
+    { name: 'Painting (1 hr min)', price: 175, hint: '', unit: 'hr', cat: 'Painting' },
+    { name: 'Painting + (1 hr min)', price: 215, hint: '', unit: 'hr', cat: 'Painting' },
+    { name: 'Wood Filler (1 hr min)', price: 150, hint: '', unit: 'hr', cat: 'Painting' },
+    { name: 'Difficult/Sketchy Access Add-On ($500 min)', price: 500, hint: '', unit: 'ea', cat: 'Services' },
   ];
 
 const KEY_CONTENT = [
@@ -345,6 +349,14 @@ const KEY_CONTENT = [
     { name: 'Spot Sealing at Heights \u2013 Level 1 / 2 / 3', price: '$225 / $350 / $500 flat', desc: 'Flat-rate option for sealing multiple small penetration points that require ladder or roof access in one visit \u2014 soffit, fascia, and flashing contact points, etc. \u2014 priced by how many points need sealing rather than itemizing each one.', bullets: ['Level 1: 1\u20133 points', 'Level 2: 4\u20137 points', 'Level 3: 8+ points'] },
   ]},
   { cat: 'LVG or Pest Blok: Custom', intro: 'Rigid, rodent-proof board stock (LVG or Pest Blok) custom cut and fit to close larger gaps and openings that mesh or fabric won\u2019t hold up to. All four tiers below are the same material \u2014 the price difference is access difficulty, not the product:', bullets: ['Easy Access (1 story) \u2014 $22/SF', 'Standard/Tougher Cuts \u2014 $24/SF', '2nd Story/Roofline \u2014 $28/SF', 'Peak/Roof Walk/Heavy Ladder \u2014 $32/SF'] },
+{ cat: 'Painting', items: [
+    { name: 'Painting', price: '$175/hr (1 hr min)', desc: 'General painting \u2014 touch-up, trim, or small areas. Billed hourly with a 1-hour minimum.' },
+    { name: 'Painting +', price: '$215/hr (1 hr min)', desc: 'More intricate painting requiring extra prep work or higher-cost materials. Billed hourly with a 1-hour minimum.' },
+    { name: 'Wood Filler', price: '$150/hr (1 hr min)', desc: 'Any repair requiring wood filler. Billed hourly with a 1-hour minimum. When quoting, factor in application time, dry time, sanding, and the finish coat \u2014 not just the filler application itself.' },
+]},
+{ cat: 'Access & Add-On Fees', items: [
+    { name: 'Difficult/Sketchy Access Add-On', price: '$500 min', desc: 'Flat add-on charge for jobs requiring extra time and risk to safely reach the work area \u2014 an unusually sketchy ladder setup, or having to hang off a roofline to reach something. $500 is the minimum; if the risk or extra time involved is unusually high, consider $750\u2013$1,000 instead of the flat minimum.' },
+]},
 ];
 
 const KEY_INTRO = 'Explains what\u2019s included for line items where the name alone isn\u2019t enough \u2014 with examples. Self-explanatory items (Box Vent (Roof), Power Vent, Hooded Vent, Dryer/Bathroom Vent Cover, Gutter Cleaning, Gutter Guard, Bird Nest Removal, Garage Door Seals) are left out on purpose.';
@@ -534,7 +546,7 @@ function closeKey() {
   let items = [];
   let nextId = 1;
   let graphDataURL = null;
-  const UNITS = ['ea','LF','SF','bag','tube','roll','set','box','pair'];
+  const UNITS = ['ea','LF','SF','bag','tube','roll','set','box','pair','hr'];
 
   // ── Saved Jobs (persistence via IndexedDB) ──
   let currentJobId = null;
@@ -903,6 +915,8 @@ function closeKey() {
         if (!isNaN(price)) total += price * qty;
         let tl = itemCount + '. ' + qtyStr + (item.unit !== 'ea' ? item.unit + ' ' : '') + desc;
         if (/painted to match/i.test(desc)) tl += '\n   * Take paint sample';
+        if (/wood filler/i.test(desc)) tl += '\n   * Consider application, dry time, sanding, and finish coat when quoting';
+        if (/difficult\/sketchy access add-on/i.test(desc)) tl += '\n   * If unusually high risk or extra time is involved, consider $750\u2013$1,000 instead of the $500 minimum';
         if (item.material) tl += '\n   Material: ' + item.material;
         if (item.techNotes) tl += '\n   Notes: ' + item.techNotes;
         techArr.push(tl);
