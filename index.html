@@ -30,7 +30,14 @@
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg-secondary); color: var(--text); min-height: 100vh; padding-bottom: env(safe-area-inset-bottom); }
 
-    /* Header */
+    .lock-screen { position: fixed; inset: 0; background: var(--bg-secondary); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.lock-box { text-align: center; max-width: 280px; width: 100%; }
+.lock-title { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.lock-sub { font-size: 13px; color: var(--text-tertiary); margin-bottom: 18px; }
+.lock-input { width: 100%; font-size: 28px; letter-spacing: 12px; text-align: center; padding: 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--bg); color: var(--text); }
+.lock-error { color: var(--danger-text); font-size: 13px; margin-top: 10px; }
+
+/* Header */
     .header { background: var(--bg-secondary); border-bottom: 0.5px solid var(--border); padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top)); position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; }
     .header img { height: 38px; width: auto; display: block; }
     .pdf-btn { font-size: 13px; padding: 8px 14px; border-radius: var(--radius-md); background: var(--text); color: var(--bg); border: none; font-family: inherit; cursor: pointer; font-weight: 500; white-space: nowrap; }
@@ -156,6 +163,45 @@
 </head>
 <body>
 
+<div id="lock-screen" class="lock-screen">
+  <div class="lock-box">
+    <div class="lock-title">🔒 TWC Scope Builder</div>
+    <div class="lock-sub">Enter code to continue</div>
+    <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="lock-input" class="lock-input" autocomplete="off" />
+    <div class="lock-error" id="lock-error" style="display:none;">Incorrect code</div>
+  </div>
+</div>
+<script>
+(function() {
+  function pinHash(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) >>> 0; }
+    return h;
+  }
+  var PIN_HASH = 1600800;
+  var lockScreen = document.getElementById('lock-screen');
+  var unlocked = localStorage.getItem('twc_unlocked') === '1';
+  if (unlocked) {
+    lockScreen.style.display = 'none';
+  } else {
+    var input = document.getElementById('lock-input');
+    var errorEl = document.getElementById('lock-error');
+    setTimeout(function(){ input.focus(); }, 100);
+    input.addEventListener('input', function() {
+      errorEl.style.display = 'none';
+      if (input.value.length === 4) {
+        if (pinHash(input.value) === PIN_HASH) {
+          localStorage.setItem('twc_unlocked', '1');
+          lockScreen.style.display = 'none';
+        } else {
+          errorEl.style.display = 'block';
+          input.value = '';
+        }
+      }
+    });
+  }
+})();
+</script>
 <!-- ── SCREEN APP ── -->
 <div class="header">
   <img id="header-logo" alt="Tactical Wildlife Control" />
