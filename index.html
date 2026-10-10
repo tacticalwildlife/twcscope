@@ -375,9 +375,11 @@
     { name: 'Painting + (1 hr min)', price: 215, hint: '', unit: 'hr', cat: 'Painting' },
     { name: 'Wood Filler (1 hr min)', price: 150, hint: '', unit: 'hr', cat: 'Painting' },
     { name: 'Difficult/Sketchy Access Add-On ($500 min)', price: 500, hint: '', unit: 'ea', cat: 'Services' },
+    { name: 'Cedar Shake Peak Protectors', price: 125, hint: '', unit: 'ea', cat: 'Roof/Heights' },
   ];
 
 const KEY_CONTENT = [
+    { name: 'Cedar Shake Peak Protectors', price: '$125/ea', desc: 'Protective cover installed at the peak of a cedar shake roof to close the gap where the roofline peaks meet \u2014 a common entry point for squirrels and other wildlife on cedar shake roofs.' },
     { name: 'Difficult/Sketchy Access Add-On', price: '$500 min', desc: 'Flat add-on charge for jobs requiring extra time and risk to safely reach the work area \u2014 an unusually sketchy ladder setup, or having to hang off a roofline to reach something. $500 is the minimum; if the risk or extra time involved is unusually high, consider $750\u2013$1,000 instead of the flat minimum.' },
     { name: 'Fascia Reinforcement', price: '$315–$390/ea', desc: 'Repairing or reinforcing fascia board that’s been chewed through or damaged, closing the gap and hardening it against re-entry. Two finish options:', bullets: ['Unpainted (White Metal) — $315/ea', 'Textured/Painted to Match — $390/ea (take a color-match sample on the Phase 1 visit)'] },
     { name: 'Fill Fabric Corner Caps', price: '$30/ea', desc: 'Pre-formed caps that close the open corner where fill fabric wraps a foundation or siding corner \u2014 without a cap, the corner is left open even after the fabric run is installed.' },
@@ -851,10 +853,20 @@ function handleDescInput(id, value) {
   }
 
   function handlePhoto(id, input) {
-    const file = input.files[0]; if (!file) return;
-    compressImage(file, 1280, 0.75, (compressed, w, h) => {
-      const item = items.find(i => i.id === id);
-      if (item) { item.photos = item.photos || []; item.photos.push({ src: compressed, w: w, h: h }); renderItems(); }
+    const files = Array.from(input.files || []); if (!files.length) return;
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    item.photos = item.photos || [];
+    const remaining = Math.max(0, 8 - item.photos.length);
+    const toProcess = files.slice(0, remaining);
+    let pending = toProcess.length;
+    if (!pending) return;
+    toProcess.forEach(file => {
+      compressImage(file, 1280, 0.75, (compressed, w, h) => {
+        item.photos.push({ src: compressed, w: w, h: h });
+        pending--;
+        if (pending === 0) renderItems();
+      });
     });
   }
   function removePhoto(id, idx) {
@@ -872,7 +884,7 @@ function handleDescInput(id, value) {
     html += '</div>';
     if (photos.length < 8) {
       html += '<label class="photo-add-btn" style="margin-top:6px;">&#128247; Add photo' +
-        '<input type="file" accept="image/*" onchange="handlePhoto(' + item.id + ',this)" style="display:none;"></label>';
+        '<input type="file" accept="image/*" multiple onchange="handlePhoto(' + item.id + ',this)" style="display:none;"></label>';
     }
     return html;
   }
