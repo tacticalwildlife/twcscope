@@ -359,8 +359,8 @@
     { name: 'Fascia Reinforcement – Textured/Painted to Match', price: 390, hint: '', unit: 'ea', cat: 'Roof/Heights' },
     { name: 'Solar Panel Fencing', price: null, hint: '$28–35', unit: 'LF', cat: 'Roof/Heights' },
     { name: 'Gutter Cleaning', price: 7, hint: '', unit: 'LF', cat: 'Gutters' },
-    { name: 'Gutter Guard Install', price: null, hint: 'TBD', unit: 'LF', cat: 'Gutters' },
-    { name: 'Gutter Guard Removal', price: null, hint: 'TBD', unit: 'LF', cat: 'Gutters' },
+    { name: 'Gutter Guard Install', price: 21, hint: '', unit: 'LF', cat: 'Gutters' },
+    { name: 'Gutter Guard Removal', price: 18, hint: '', unit: 'LF', cat: 'Gutters' },
     { name: 'LVG or Pest Blok: Custom – Easy Access (1 story)', price: 22, hint: '', unit: 'SF', cat: 'LVG or Pest Blok: Custom' },
     { name: 'LVG or Pest Blok: Custom – Standard/Tougher Cuts', price: 24, hint: '', unit: 'SF', cat: 'LVG or Pest Blok: Custom' },
     { name: 'LVG or Pest Blok: Custom – 2nd Story/Roofline', price: 28, hint: '', unit: 'SF', cat: 'LVG or Pest Blok: Custom' },
@@ -383,6 +383,7 @@ const KEY_CONTENT = [
     { name: 'Fill Fabric Corner Caps', price: '$30/ea', desc: 'Pre-formed caps that close the open corner where fill fabric wraps a foundation or siding corner \u2014 without a cap, the corner is left open even after the fabric run is installed.' },
     { name: 'Fill Fabric Siding', price: '$9/LF', desc: 'Mesh fabric installed behind or over siding panels to block the gap between siding and wall sheathing \u2014 a common squirrel and rodent entry route along a wall line.' },
     { name: 'Gable Vent LVG', price: '$375\u2013$490/ea', desc: 'Custom-fabricated gable vent cover \u2014 cut to size from LVG with trim for a finished look, rather than an off-the-shelf cover. Stocked in white and black by default; can be painted to match for an extra fee (paint only, no texture): White or Black (default) \u2014 $375/ea. Painted to Match \u2014 $490/ea (+$115, take a color sample on the Phase 1 visit).' },
+    { name: 'Gutter Cleaning', price: '$7/LF ($750 min)', desc: 'Standard gutter cleaning, billed per linear foot with a $750 minimum per job.' },
     { name: 'LVG or Pest Blok: Custom', price: '$22–$32/SF', desc: 'Rigid, rodent-proof board stock (LVG or Pest Blok) custom cut and fit to close larger gaps and openings that mesh or fabric won\u2019t hold up to. All four tiers below are the same material \u2014 the price difference is access difficulty, not the product:', bullets: ['Easy Access (1 story) \u2014 $22/SF', 'Standard/Tougher Cuts \u2014 $24/SF', '2nd Story/Roofline \u2014 $28/SF', 'Peak/Roof Walk/Heavy Ladder \u2014 $32/SF'] },
     { name: 'Painting', price: '$175/hr (1 hr min)', desc: 'General painting \u2014 touch-up, trim, or small areas. Billed hourly with a 1-hour minimum.' },
     { name: 'Painting +', price: '$215/hr (1 hr min)', desc: 'More intricate painting requiring extra prep work or higher-cost materials. Billed hourly with a 1-hour minimum.' },
@@ -576,9 +577,10 @@ function handleDescInput(id, value) {
     const item = items.find(i => i.id === id);
     const el = document.getElementById('lt-' + id);
     if (!item || !el) return;
-    const qty = parseFloat(item.qty) || 0;
+    const qty = parseFloat(item.qty) || 1;
     const price = parseFloat(item.price) || 0;
-    const total = qty * price;
+    let total = qty * price;
+    if (/gutter cleaning/i.test(item.desc||'')) total = Math.max(total, 750);
     const amtEl = el.querySelector('.line-total-amount');
     if (amtEl) {
       if (total > 0) {
@@ -960,7 +962,11 @@ function handleDescInput(id, value) {
         const qtyStr = item.qty ? item.qty + ' ' : '';
         custArr.push('- ' + qtyStr + desc);
         const price = parseFloat(item.price), qty = parseFloat(item.qty) || 1;
-        if (!isNaN(price)) total += price * qty;
+        if (!isNaN(price)) {
+          let lineAmt = price * qty;
+          if (/gutter cleaning/i.test(desc)) lineAmt = Math.max(lineAmt, 750);
+          total += lineAmt;
+        }
         let tl = itemCount + '. ' + qtyStr + (item.unit !== 'ea' ? item.unit + ' ' : '') + desc;
         if (/painted to match/i.test(desc)) tl += '\n   * Take paint sample';
         if (/wood filler/i.test(desc)) tl += '\n   * Consider application, dry time, sanding, and finish coat when quoting';
@@ -1134,7 +1140,9 @@ function handleDescInput(id, value) {
         const priceNum = parseFloat(item.price);
         const qtyNum = parseFloat(item.qty) || 1;
         if (!isNaN(priceNum)) {
-          priceStr = '$' + (priceNum * qtyNum).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+          let lineAmt = priceNum * qtyNum;
+          if (/gutter cleaning/i.test(desc)) lineAmt = Math.max(lineAmt, 750);
+          priceStr = '$' + lineAmt.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
         } else if (item._priceHint) {
           priceStr = item._priceHint;
         }
@@ -1247,7 +1255,11 @@ function handleDescInput(id, value) {
       validItems.forEach(item => {
         const priceNum = parseFloat(item.price);
         const qtyNum = parseFloat(item.qty) || 1;
-        if (!isNaN(priceNum)) grandTotal += priceNum * qtyNum;
+        if (!isNaN(priceNum)) {
+          let lineAmt = priceNum * qtyNum;
+          if (/gutter cleaning/i.test((item.desc||''))) lineAmt = Math.max(lineAmt, 750);
+          grandTotal += lineAmt;
+        }
       });
       const warranty = grandTotal > 0 ? Math.max(grandTotal * 0.10, 300) : 0;
       ensureSpace(20);
