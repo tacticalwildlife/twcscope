@@ -65,6 +65,7 @@
     input[type=text], input[type=number], select, textarea { width: 100%; font-size: 15px; padding: 9px 11px; border: 0.5px solid var(--border); border-radius: var(--radius-md); background: var(--bg); color: var(--text); font-family: inherit; outline: none; -webkit-appearance: none; appearance: none; }
     input:focus, select:focus, textarea:focus { border-color: var(--border-strong); }
     textarea { resize: vertical; font-family: 'Menlo','Courier New',monospace; font-size: 12px; line-height: 1.6; min-height: 80px; }
+    .tech-notes-ta { min-height: 50px; font-size: 13px; }
 
     .row3 { display: grid; grid-template-columns: minmax(0,1fr) 72px 68px; gap: 8px; margin-bottom: 8px; }
     .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
@@ -220,18 +221,27 @@
 
     <div style="margin-bottom:12px;">
     <p class="section-label">Schedule</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+    <div style="margin-bottom:8px;max-width:220px;">
+      <div class="field-label">Project phases</div>
+      <select id="project-phases" onchange="updateProjectPhases()">
+        <option value="1">Single phase</option>
+        <option value="2">2 phases</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr;gap:8px;" id="phase-cards-grid">
     <div class="card">
       <p style="font-size:11px;font-weight:600;color:var(--label-strong);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">Phase 1</p>
       <div style="margin-bottom:8px;"><div class="field-label">Estimated hours</div><div class="labor-input-wrap"><input type="number" id="p1-hours" placeholder="0" min="0" step="0.5" oninput="updateLaborTime()" /><span class="labor-unit">hrs</span></div></div>
+      <div style="margin-bottom:8px;"><div class="field-label">Operators needed</div><select id="p1-operators" onchange="updateLaborTime()"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
       <div class="notes-toggle-wrap">
         <button type="button" class="notes-toggle-label" onclick="toggleNotes('p1')"><span class="notes-toggle-arrow" id="p1-notes-arrow">&#9656;</span> Notes for tech <span style="color:var(--text-tertiary)">(optional)</span><span class="notes-dot" id="p1-notes-dot"></span></button>
         <div class="notes-toggle-body" id="p1-notes-wrap" style="display:none;"><input type="text" id="p1-notes" placeholder="e.g. bring 32ft ladder, access through side gate" oninput="updateLaborTime()" /></div>
       </div>
     </div>
-    <div class="card">
+    <div class="card" id="phase2-card" style="display:none;">
       <p style="font-size:11px;font-weight:600;color:var(--label-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">Phase 2</p>
       <div style="margin-bottom:8px;"><div class="field-label">Estimated hours</div><div class="labor-input-wrap"><input type="number" id="p2-hours" placeholder="0" min="0" step="0.5" oninput="updateLaborTime()" /><span class="labor-unit">hrs</span></div></div>
+      <div style="margin-bottom:8px;"><div class="field-label">Operators needed</div><select id="p2-operators" onchange="updateLaborTime()"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
       <div class="notes-toggle-wrap">
         <button type="button" class="notes-toggle-label" onclick="toggleNotes('p2')"><span class="notes-toggle-arrow" id="p2-notes-arrow">&#9656;</span> Notes for tech <span style="color:var(--text-tertiary)">(optional)</span><span class="notes-dot" id="p2-notes-dot"></span></button>
         <div class="notes-toggle-body" id="p2-notes-wrap" style="display:none;"><input type="text" id="p2-notes" placeholder="e.g. close off entry points, remove traps" oninput="updateLaborTime()" /></div>
@@ -543,25 +553,43 @@ function handleDescInput(id, value) {
   function getLaborBlock() {
     const p1h = parseFloat(document.getElementById('p1-hours')?.value) || 0;
     const p1n = (document.getElementById('p1-notes')?.value || '').trim();
+    const p1op = parseInt(document.getElementById('p1-operators')?.value) || 1;
     const p2h = parseFloat(document.getElementById('p2-hours')?.value) || 0;
     const p2n = (document.getElementById('p2-notes')?.value || '').trim();
-    const hasP1 = p1h > 0 || p1n, hasP2 = p2h > 0 || p2n;
+    const p2op = parseInt(document.getElementById('p2-operators')?.value) || 1;
+    const hasP1 = p1h > 0 || p1n || p1op > 1, hasP2 = p2h > 0 || p2n || p2op > 1;
     if (!hasP1 && !hasP2) return '';
     let block = '';
     if (hasP1) {
       block += '--- PHASE 1 ---';
       if (p1h) block += '\nEstimated time: ' + p1h + ' hr' + (p1h !== 1 ? 's' : '');
+      block += '\nOperators needed: ' + p1op;
       if (p1n) block += '\nNotes: ' + p1n;
     }
     if (hasP2) {
       if (block) block += '\n\n';
       block += '--- PHASE 2 ---';
       if (p2h) block += '\nEstimated time: ' + p2h + ' hr' + (p2h !== 1 ? 's' : '');
+      block += '\nOperators needed: ' + p2op;
       if (p2n) block += '\nNotes: ' + p2n;
     }
     return block;
   }
   function updateLaborTime() { updateNotesDot('p1'); updateNotesDot('p2'); updateOutputs(); }
+  function updateProjectPhases() {
+    const is2 = document.getElementById('project-phases').value === '2';
+    document.getElementById('phase2-card').style.display = is2 ? '' : 'none';
+    document.getElementById('phase-cards-grid').style.gridTemplateColumns = is2 ? '1fr 1fr' : '1fr';
+    if (!is2) {
+      document.getElementById('p2-hours').value = '';
+      document.getElementById('p2-notes').value = '';
+      document.getElementById('p2-operators').value = '1';
+      document.getElementById('p2-notes-wrap').style.display = 'none';
+      document.getElementById('p2-notes-arrow').innerHTML = '&#9656;';
+      updateNotesDot('p2');
+    }
+    updateLaborTime();
+  }
   function toggleNotes(prefix) {
     const wrap = document.getElementById(prefix + '-notes-wrap');
     const arrow = document.getElementById(prefix + '-notes-arrow');
@@ -664,6 +692,9 @@ function handleDescInput(id, value) {
       p1Notes: document.getElementById('p1-notes').value || '',
       p2Hours: document.getElementById('p2-hours').value || '',
       p2Notes: document.getElementById('p2-notes').value || '',
+      p1Operators: document.getElementById('p1-operators').value || '1',
+      p2Operators: document.getElementById('p2-operators').value || '1',
+      projectPhases: document.getElementById('project-phases').value || '1',
       graphDataURL: graphDataURL,
     };
   }
@@ -683,6 +714,12 @@ function handleDescInput(id, value) {
     document.getElementById('p1-notes').value = state.p1Notes || '';
     document.getElementById('p2-hours').value = state.p2Hours || '';
     document.getElementById('p2-notes').value = state.p2Notes || '';
+    document.getElementById('p1-operators').value = state.p1Operators || '1';
+    document.getElementById('p2-operators').value = state.p2Operators || '1';
+    document.getElementById('project-phases').value = state.projectPhases || ((state.p2Hours || (state.p2Notes||'').trim()) ? '2' : '1');
+    const is2Phase = document.getElementById('project-phases').value === '2';
+    document.getElementById('phase2-card').style.display = is2Phase ? '' : 'none';
+    document.getElementById('phase-cards-grid').style.gridTemplateColumns = is2Phase ? '1fr 1fr' : '1fr';
     const p1Open = !!(state.p1Notes || '').trim(), p2Open = !!(state.p2Notes || '').trim();
     document.getElementById('p1-notes-wrap').style.display = p1Open ? 'block' : 'none';
     document.getElementById('p1-notes-arrow').innerHTML = p1Open ? '&#9662;' : '&#9656;';
@@ -719,6 +756,11 @@ function handleDescInput(id, value) {
     document.getElementById('p1-notes').value = '';
     document.getElementById('p2-hours').value = '';
     document.getElementById('p2-notes').value = '';
+    document.getElementById('p1-operators').value = '1';
+    document.getElementById('p2-operators').value = '1';
+    document.getElementById('project-phases').value = '1';
+    document.getElementById('phase2-card').style.display = 'none';
+    document.getElementById('phase-cards-grid').style.gridTemplateColumns = '1fr';
     document.getElementById('p1-notes-wrap').style.display = 'none';
     document.getElementById('p1-notes-arrow').innerHTML = '&#9656;';
     document.getElementById('p2-notes-wrap').style.display = 'none';
@@ -855,6 +897,35 @@ function handleDescInput(id, value) {
     reader.readAsDataURL(file);
   }
 
+  function escTa(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function autoGrowTextarea(ta) {
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  }
+  function handleBulletEnter(e) {
+    if (e.key !== 'Enter' || e.shiftKey) return;
+    const ta = e.target;
+    const pos = ta.selectionStart;
+    const value = ta.value;
+    const lineStart = value.lastIndexOf('\n', pos - 1) + 1;
+    const currentLine = value.slice(lineStart, pos);
+    const bulletMatch = currentLine.match(/^(\s*)[•\-]\s/);
+    if (!bulletMatch) return;
+    e.preventDefault();
+    if (currentLine.trim() === bulletMatch[0].trim()) {
+      ta.value = value.slice(0, lineStart) + value.slice(pos);
+      ta.selectionStart = ta.selectionEnd = lineStart;
+    } else {
+      const insert = '\n' + bulletMatch[1] + '• ';
+      ta.value = value.slice(0, pos) + insert + value.slice(pos);
+      const newPos = pos + insert.length;
+      ta.selectionStart = ta.selectionEnd = newPos;
+    }
+    autoGrowTextarea(ta);
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+  }
   function handlePhoto(id, input) {
     const files = Array.from(input.files || []); if (!files.length) return;
     const item = items.find(i => i.id === id);
@@ -931,7 +1002,7 @@ function handleDescInput(id, value) {
             '<div><div class="field-label">Price/unit <span style="color:var(--text-tertiary)">(internal)</span></div><input type="number" placeholder="' + (item._priceHint || '0.00') + '" min="0" step="0.01" value="' + (item.price||'') + '" oninput="updateItem(' + item.id + ',\'price\',this.value);updateLineTotal(' + item.id + ')"/></div>' +
             '<div><div class="field-label">Material / spec <span style="color:var(--text-tertiary)">(tech)</span></div><input type="text" placeholder="e.g. 16ga galv. hw cloth" value="' + (item.material||'') + '" oninput="updateItem(' + item.id + ',\'material\',this.value)"/></div>' +
           '</div>' +
-          '<div style="margin-bottom:8px;"><div class="field-label">Tech notes <span style="color:var(--text-tertiary)">(tech only)</span></div><input type="text" placeholder=\'e.g. staple every 3", overlap 2"\' value="' + (item.techNotes||'') + '" oninput="updateItem(' + item.id + ',\'techNotes\',this.value)"/></div>' +
+          '<div style="margin-bottom:8px;"><div class="field-label">Tech notes <span style="color:var(--text-tertiary)">(tech only)</span></div><textarea class="tech-notes-ta" id="tn-' + item.id + '" placeholder=\'e.g. staple every 3", overlap 2"\' oninput="updateItem(' + item.id + ',\'techNotes\',this.value);autoGrowTextarea(this)" onkeydown="handleBulletEnter(event)">' + escTa(item.techNotes||'') + '</textarea></div>' +
           '<div class="line-total-bar" id="lt-' + item.id + '"><span class="line-total-label">Line total</span><span class="line-total-amount zero">—</span></div>' +
           
           '<div><div class="field-label">Photos <span style="color:var(--text-tertiary)">(optional)</span></div>' +
@@ -940,6 +1011,7 @@ function handleDescInput(id, value) {
       }
       container.appendChild(div);
     });
+    container.querySelectorAll('.tech-notes-ta').forEach(autoGrowTextarea);
     updateOutputs();
     // Refresh line totals after render
     items.forEach(it => { if (it.type === 'item') updateLineTotal(it.id); });
