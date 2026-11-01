@@ -266,6 +266,19 @@
   <button class="add-btn" onclick="addItem()">+ Add item</button>
   <button class="add-note-btn" onclick="addNote()">★ Add note</button>
 
+  <div class="card" style="margin-bottom:14px;">
+    <button type="button" class="notes-toggle-label" onclick="toggleRoofSafety()">
+      <span class="notes-toggle-arrow" id="roof-safety-arrow">&#9656;</span> Roof Safety <span style="color:var(--text-tertiary)">(select gear, if any)</span><span id="roof-safety-summary" style="color:var(--label-muted);margin-left:6px;"></span>
+    </button>
+    <div id="roof-safety-body" style="display:none;flex-direction:column;gap:8px;margin-top:8px;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-primary);"><input type="checkbox" value="Ridge Pro" onchange="updateRoofSafety()"> Ridge Pro</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-primary);"><input type="checkbox" value="Goat" onchange="updateRoofSafety()"> Goat</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-primary);"><input type="checkbox" value="Permanent anchor" onchange="updateRoofSafety()"> Permanent anchor</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-primary);"><input type="checkbox" value="Temporary anchor" onchange="updateRoofSafety()"> Temporary anchor</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-primary);"><input type="checkbox" value="EPA (Earth Penetrating Anchor)" onchange="updateRoofSafety()"> EPA (Earth Penetrating Anchor)</label>
+    </div>
+  </div>
+
   <div class="total-bar">
     <span class="total-label">&#128274; Internal total — enter into Jobber</span>
     <span class="total-amount" id="total-display">$0.00</span>
@@ -531,6 +544,13 @@ function handleDescInput(id, value) {
     item.price = match.price !== null ? match.price : '';
     item._priceHint = match.hint || '';
     item.phase = match.defaultPhase || '1';
+    const _digNoteItems = ['UGF (Underground Fencing) – Hardware Cloth', 'UGF (Underground Fencing) – LVG/Pest Blok', 'Dig Defense'];
+    if (_digNoteItems.includes(match.name)) {
+      const digNote = 'May require calling JULIE (call before you dig) before starting — allow 2-3 business days for clearance before this work can be scheduled.';
+      if (!item.techNotes || !item.techNotes.includes('JULIE')) {
+        item.techNotes = item.techNotes ? item.techNotes + '\n' + digNote : digNote;
+      }
+    }
     if (match.name === 'OWD (One Way Door)' && !items.some(i => i.desc === 'OWDR (One Way Door Removal) & Re-Inspect')) {
       const owdrMatch = PRICE_LIST.find(p => p.name === 'OWDR (One Way Door Removal) & Re-Inspect');
       if (owdrMatch) {
@@ -602,6 +622,21 @@ function handleDescInput(id, value) {
     const dot = document.getElementById(prefix + '-notes-dot');
     if (!input || !dot) return;
     dot.classList.toggle('filled', !!input.value.trim());
+  }
+  function toggleRoofSafety() {
+    const body = document.getElementById('roof-safety-body');
+    const arrow = document.getElementById('roof-safety-arrow');
+    const open = body.style.display === 'flex';
+    body.style.display = open ? 'none' : 'flex';
+    arrow.innerHTML = open ? '&#9656;' : '&#9662;';
+  }
+  function getRoofSafetyList() {
+    return Array.from(document.querySelectorAll('#roof-safety-body input[type=checkbox]:checked')).map(c => c.value);
+  }
+  function updateRoofSafety() {
+    const list = getRoofSafetyList();
+    document.getElementById('roof-safety-summary').textContent = list.length ? '— ' + list.join(', ') : '';
+    updateOutputs();
   }
 
 
@@ -695,6 +730,7 @@ function handleDescInput(id, value) {
       p1Operators: document.getElementById('p1-operators').value || '1',
       p2Operators: document.getElementById('p2-operators').value || '1',
       projectPhases: document.getElementById('project-phases').value || '1',
+      roofSafety: getRoofSafetyList(),
       graphDataURL: graphDataURL,
     };
   }
@@ -726,6 +762,9 @@ function handleDescInput(id, value) {
     document.getElementById('p2-notes-wrap').style.display = p2Open ? 'block' : 'none';
     document.getElementById('p2-notes-arrow').innerHTML = p2Open ? '&#9662;' : '&#9656;';
     updateNotesDot('p1'); updateNotesDot('p2');
+    const _roofSafety = state.roofSafety || [];
+    document.querySelectorAll('#roof-safety-body input[type=checkbox]').forEach(cb => { cb.checked = _roofSafety.includes(cb.value); });
+    document.getElementById('roof-safety-summary').textContent = _roofSafety.length ? '— ' + _roofSafety.join(', ') : '';
     renderItems();
   }
   function scheduleAutosave() {
@@ -766,6 +805,8 @@ function handleDescInput(id, value) {
     document.getElementById('p2-notes-wrap').style.display = 'none';
     document.getElementById('p2-notes-arrow').innerHTML = '&#9656;';
     updateNotesDot('p1'); updateNotesDot('p2');
+    document.querySelectorAll('#roof-safety-body input[type=checkbox]').forEach(cb => cb.checked = false);
+    document.getElementById('roof-safety-summary').textContent = '';
     addItem(); addItem();
   }
   function initApp() {
@@ -1092,6 +1133,8 @@ function handleDescInput(id, value) {
     }
     const laborBlock = getLaborBlock();
     if (laborBlock) techLines.push('\n' + laborBlock);
+    const roofSafetyList = getRoofSafetyList();
+    if (roofSafetyList.length) techLines.push('\nRoof Safety: ' + roofSafetyList.join(', '));
     document.getElementById('output-tech').value = techLines.join('\n');
     document.getElementById('total-display').textContent = '$' + total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
     const warranty = total > 0 ? Math.max(total * 0.10, 300) : 0;
