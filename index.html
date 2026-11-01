@@ -544,13 +544,6 @@ function handleDescInput(id, value) {
     item.price = match.price !== null ? match.price : '';
     item._priceHint = match.hint || '';
     item.phase = match.defaultPhase || '1';
-    const _digNoteItems = ['UGF (Underground Fencing) – Hardware Cloth', 'UGF (Underground Fencing) – LVG/Pest Blok', 'Dig Defense'];
-    if (_digNoteItems.includes(match.name)) {
-      const digNote = 'May require calling JULIE (call before you dig) before starting — allow 2-3 business days for clearance before this work can be scheduled.';
-      if (!item.techNotes || !item.techNotes.includes('JULIE')) {
-        item.techNotes = item.techNotes ? item.techNotes + '\n' + digNote : digNote;
-      }
-    }
     if (match.name === 'OWD (One Way Door)' && !items.some(i => i.desc === 'OWDR (One Way Door Removal) & Re-Inspect')) {
       const owdrMatch = PRICE_LIST.find(p => p.name === 'OWDR (One Way Door Removal) & Re-Inspect');
       if (owdrMatch) {
@@ -1121,6 +1114,9 @@ function handleDescInput(id, value) {
     }
     if (items.some(item => /underground fencing/i.test(item.desc || ''))) {
       customerLines.push('', "Please note: Underground fencing requires trenching and digging around the structure. Any plants or vegetation within 2' of the area may experience root damage or be destroyed.");
+    }
+    if (items.some(item => /dig defense|underground fencing/i.test(item.desc || ''))) {
+      customerLines.push('', "Please note: This work may require a utility locate (JULIE / Call Before You Dig) prior to starting. This can take 2-3 business days to clear before we're able to schedule the work.");
     }
     document.getElementById('output-customer').value = customerLines.join('\n');
     let techLines = ['JOB SCOPE\n'];
