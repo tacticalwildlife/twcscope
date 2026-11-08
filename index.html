@@ -1234,7 +1234,6 @@ function handleDescInput(id, value) {
         const sizeStr = (meta.hasSize && a.size) ? ' (' + a.size + ')' : '';
         const desc = meta.name + sizeStr;
         itemCount++;
-        phase1Customer.push('- ' + desc);
         let tl = itemCount + '. ' + desc;
         if (a.note) tl += '\n   Note: ' + a.note;
         phase1Tech.push(tl);
