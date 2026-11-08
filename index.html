@@ -223,6 +223,7 @@
     <button class="hamburger-btn" onclick="openMenu()" aria-label="Menu">&#9776;</button>
     <img id="header-logo" alt="Tactical Wildlife Control" />
   </div>
+  <button class="key-btn" onclick="openJobs()">&#128193; Jobs</button>
 </div>
 
 <div class="side-menu-backdrop" id="side-menu-backdrop" onclick="closeMenu()"></div>
@@ -232,9 +233,8 @@
     <button class="key-close-btn" onclick="closeMenu()">&#10003; Close</button>
   </div>
   <div class="side-menu-body">
-    <button class="side-menu-item" onclick="closeMenu(); openJobs();">&#128193; Jobs</button>
     <button class="side-menu-item" onclick="closeMenu(); openKey();">&#128214; Key</button>
-    <button class="side-menu-item" id="menu-wildlife-btn" onclick="closeMenu(); switchJobType('wildlife');">&#128062; Wildlife &#10003;</button>
+    <button class="side-menu-item" id="menu-wildlife-btn" onclick="closeMenu(); switchJobType('wildlife');">&#128062; Exclusion &#10003;</button>
     <button class="side-menu-item" id="menu-insulation-btn" onclick="closeMenu(); switchJobType('insulation');">&#127959;&#65039; Insulation</button>
   </div>
 </div>
@@ -1089,7 +1089,7 @@ function handleDescInput(id, value) {
     if (warrantyBar) warrantyBar.style.display = (type === 'insulation') ? 'none' : '';
     const wBtn = document.getElementById('menu-wildlife-btn');
     const iBtn = document.getElementById('menu-insulation-btn');
-    if (wBtn) wBtn.innerHTML = '&#128062; Wildlife' + (type === 'wildlife' ? ' &#10003;' : '');
+    if (wBtn) wBtn.innerHTML = '&#128062; Exclusion' + (type === 'wildlife' ? ' &#10003;' : '');
     if (iBtn) iBtn.innerHTML = '&#127959;&#65039; Insulation' + (type === 'insulation' ? ' &#10003;' : '');
     dbGetAllJobs().then(all => {
       all = (all||[]).filter(j => (j.jobType||'wildlife') === type);
