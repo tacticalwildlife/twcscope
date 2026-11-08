@@ -1432,7 +1432,7 @@ function handleDescInput(id, value) {
       const sizeStr = (meta.hasSize && a.size) ? ' (' + a.size + ')' : '';
       return { type:'item', id:a.id, qty:a.qty, unit:a.unit||'ea', desc: meta.name + sizeStr, price:a.price, material:'', techNotes:a.note||'', photos:a.photos||[] };
     }) : [];
-    const validItems = accessAsItems.concat(items.filter(i => i.type === 'item' && (i.desc||'').trim()));
+    const validItems = items.filter(i => i.type === 'item' && (i.desc||'').trim());
     const validNotes = items.filter(i => i.type === 'note' && ((i.material||'').trim() || (i.techNotes||'').trim()));
     const total = validItems.length + validNotes.length;
     ensureSpace(10);
@@ -1566,9 +1566,21 @@ function handleDescInput(id, value) {
       }
     });
 
+    if (includePrices && JOB_TYPE === 'insulation' && accessAsItems.length) {
+      ensureSpace(14);
+      doc.setTextColor(170, 170, 168);
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      doc.text('ACCESS AND WORKABILITY  —  TECH ONLY  —  ' + accessAsItems.length + ' ITEM' + (accessAsItems.length !== 1 ? 'S' : ''), ML, y + 4);
+      y += 9;
+      accessAsItems.forEach((item, idx) => {
+        drawItem(item, idx + 1);
+      });
+    }
+
     if (includePrices) {
       let grandTotal = 0;
-      validItems.forEach(item => {
+      validItems.concat(accessAsItems).forEach(item => {
         const priceNum = parseFloat(item.price);
         const qtyNum = parseFloat(item.qty) || 1;
         if (!isNaN(priceNum)) {
