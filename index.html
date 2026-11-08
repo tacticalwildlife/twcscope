@@ -172,6 +172,7 @@
     .notes-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--note-color); display: none; margin-left: 2px; }
     .notes-dot.filled { display: inline-block; }
     select.phase-select { width: auto; font-size: 11px; padding: 3px 20px 3px 8px; border-radius: 20px; border: 0.5px solid var(--border-strong); background: var(--bg-secondary); color: var(--text-secondary); font-weight: 500; cursor: pointer; }
+  body.job-insulation .phase-select { display: none; }
 
 </style>
 </head>
@@ -233,7 +234,8 @@
   <div class="side-menu-body">
     <button class="side-menu-item" onclick="closeMenu(); openJobs();">&#128193; Jobs</button>
     <button class="side-menu-item" onclick="closeMenu(); openKey();">&#128214; Key</button>
-    <button class="side-menu-item side-menu-item-disabled" disabled>&#127959;&#65039; Insulation <span class="side-menu-badge">Coming soon</span></button>
+    <button class="side-menu-item" id="menu-wildlife-btn" onclick="closeMenu(); switchJobType('wildlife');">&#128062; Wildlife &#10003;</button>
+    <button class="side-menu-item" id="menu-insulation-btn" onclick="closeMenu(); switchJobType('insulation');">&#127959;&#65039; Insulation</button>
   </div>
 </div>
 
@@ -246,7 +248,7 @@
 
     <div style="margin-bottom:12px;">
     <p class="section-label">Schedule</p>
-    <div style="margin-bottom:8px;max-width:220px;">
+    <div style="margin-bottom:8px;max-width:220px;" id="project-phases-wrap">
       <div class="field-label">Project phases</div>
       <select id="project-phases" onchange="updateProjectPhases()">
         <option value="1">Single phase</option>
@@ -255,7 +257,7 @@
     </div>
     <div style="display:grid;grid-template-columns:1fr;gap:8px;" id="phase-cards-grid">
     <div class="card">
-      <p style="font-size:11px;font-weight:600;color:var(--label-strong);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">Phase 1</p>
+      <p id="phase1-label" style="font-size:11px;font-weight:600;color:var(--label-strong);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">Phase 1</p>
       <div style="margin-bottom:8px;"><div class="field-label">Estimated hours</div><div class="labor-input-wrap"><input type="number" id="p1-hours" placeholder="0" min="0" step="0.5" oninput="updateLaborTime()" /><span class="labor-unit">hrs</span></div></div>
       <div style="margin-bottom:8px;"><div class="field-label">Operators needed</div><select id="p1-operators" onchange="updateLaborTime()"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
       <div class="notes-toggle-wrap">
@@ -285,6 +287,11 @@
     </div>
   </div>
 
+  <div class="card" style="margin-bottom:14px;" id="access-section">
+    <p class="section-label" style="margin-bottom:8px;">Access and Workability</p>
+    <div id="access-items-container"></div>
+  </div>
+
   <p class="section-label">Line items</p>
   <div id="items-container"></div>
 
@@ -309,7 +316,7 @@
     <span class="total-amount" id="total-display">$0.00</span>
   </div>
 
-  <div class="total-bar" style="margin-top:-2px;">
+  <div class="total-bar" style="margin-top:-2px;" id="warranty-bar">
     <span class="total-label">&#128737; Annual warranty (10%, $300 min)</span>
     <span class="total-amount" id="warranty-display" style="font-size:20px;">$0.00</span>
   </div>
@@ -427,6 +434,18 @@
     { name: 'Cedar Shake Peak Protectors', price: 125, hint: '', unit: 'ea', cat: 'Roof/Heights' },
   ];
 
+  const PRICE_LIST_INSULATION = [
+    { name: 'Remove Batt Insulation', price: 15, hint: '', unit: 'LF', cat: 'Insulation' },
+    { name: 'Install Batt Insulation', price: 30, hint: '', unit: 'LF', cat: 'Insulation' },
+    { name: 'Remove Blown Insulation', price: 2.10, hint: '', unit: 'SF', cat: 'Insulation' },
+    { name: 'Install Blown Insulation', price: 4.75, hint: '', unit: 'SF', cat: 'Insulation' },
+    { name: 'R&R Can Light Covers', price: 45, hint: '', unit: 'ea', cat: 'Insulation' },
+    { name: 'R&R Baffles - Large', price: 22, hint: '', unit: 'ea', cat: 'Insulation' },
+    { name: 'R&R Baffles - Small', price: 15, hint: '', unit: 'ea', cat: 'Insulation' },
+    { name: 'Dumpster', price: 600, hint: '', unit: 'ea', cat: 'Insulation' },
+    { name: 'Air Sealing', price: 0.96, hint: '', unit: 'SF', cat: 'Insulation' },
+  ];
+
 const KEY_CONTENT = [
     { name: 'Cedar Shake Peak Protectors', price: '$125/ea', desc: 'Protective cover installed at the peak of a cedar shake roof to close the gap where the roofline peaks meet \u2014 a common entry point for squirrels and other wildlife on cedar shake roofs.' },
     { name: 'Difficult/Sketchy Access Add-On', price: '$500 min', desc: 'Flat add-on charge for jobs requiring extra time and risk to safely reach the work area \u2014 an unusually sketchy ladder setup, or having to hang off a roofline to reach something. $500 is the minimum; if the risk or extra time involved is unusually high, consider $750\u2013$1,000 instead of the flat minimum.' },
@@ -526,6 +545,10 @@ function handleDescInput(id, value) {
     showPriceDropdown(id, value);
   }
 
+  function getPriceListForItem(id) {
+    return JOB_TYPE === 'insulation' ? PRICE_LIST_INSULATION : PRICE_LIST;
+  }
+
   function priceOptionsHTML(id, list) {
     const cats = {};
     list.forEach(p => { if (!cats[p.cat]) cats[p.cat] = []; cats[p.cat].push(p); });
@@ -549,7 +572,7 @@ function handleDescInput(id, value) {
     if (!dd) return;
     if (!query || query.length < 1) { dd.classList.remove('open'); dd.dataset.allOpen = ''; return; }
     const q = query.toLowerCase();
-    const matches = PRICE_LIST.filter(p => p.name.toLowerCase().includes(q) || (p.searchAlias && p.searchAlias.toLowerCase().includes(q)));
+    const matches = getPriceListForItem(id).filter(p => p.name.toLowerCase().includes(q) || (p.searchAlias && p.searchAlias.toLowerCase().includes(q)));
     if (!matches.length) { dd.classList.remove('open'); dd.dataset.allOpen = ''; return; }
     dd.innerHTML = priceOptionsHTML(id, matches);
     dd.dataset.allOpen = '';
@@ -564,7 +587,7 @@ function handleDescInput(id, value) {
       dd.dataset.allOpen = '';
       return;
     }
-    dd.innerHTML = priceOptionsHTML(id, PRICE_LIST);
+    dd.innerHTML = priceOptionsHTML(id, getPriceListForItem(id));
     dd.dataset.allOpen = '1';
     dd.classList.add('open');
   }
@@ -572,7 +595,8 @@ function handleDescInput(id, value) {
   function selectPrice(id, name) {
     const item = items.find(i => i.id === id);
     if (!item) return;
-    const match = PRICE_LIST.find(p => p.name === name);
+    const list = getPriceListForItem(id);
+    const match = list.find(p => p.name === name);
     if (!match) return;
     item.desc = match.name;
     item.unit = match.unit;
@@ -584,6 +608,14 @@ function handleDescInput(id, value) {
       if (owdrMatch) {
         const owdrItem = { type:'item', id:nextId++, phase: owdrMatch.defaultPhase || '1', qty:'', unit: owdrMatch.unit, desc: owdrMatch.name, price: owdrMatch.price !== null ? owdrMatch.price : '', material:'', techNotes:'', photos:[], _priceHint: owdrMatch.hint || '' };
         items.splice(items.indexOf(item) + 1, 0, owdrItem);
+      }
+    }
+    const REMOVE_INSTALL_PAIRS = { 'Remove Batt Insulation': 'Install Batt Insulation', 'Remove Blown Insulation': 'Install Blown Insulation' };
+    if (REMOVE_INSTALL_PAIRS[match.name] && !items.some(i => i.desc === REMOVE_INSTALL_PAIRS[match.name])) {
+      const installMatch = PRICE_LIST_INSULATION.find(p => p.name === REMOVE_INSTALL_PAIRS[match.name]);
+      if (installMatch) {
+        const installItem = { type:'item', id:nextId++, phase:'1', qty: item.qty, unit: installMatch.unit, desc: installMatch.name, price: installMatch.price !== null ? installMatch.price : '', material:'', techNotes:'', photos:[], _priceHint: installMatch.hint || '' };
+        items.splice(items.indexOf(item) + 1, 0, installItem);
       }
     }
     closePriceDropdowns();
@@ -692,6 +724,17 @@ function handleDescInput(id, value) {
   let items = [];
   let nextId = 1;
   let graphDataURL = null;
+  let JOB_TYPE = 'wildlife';
+  let accessData = {
+    tight: { id:-1, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
+    inaccessible: { id:-2, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
+    contamination: { id:-3, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
+  };
+  const ACCESS_META = {
+    tight: { name: 'Tight, Prone Required Access', hasSize: true },
+    inaccessible: { name: 'Inaccessible without Cutting', hasSize: true },
+    contamination: { name: 'Extreme Contamination', hasSize: false },
+  };
   const UNITS = ['ea','LF','SF','bag','tube','roll','set','box','pair','hr'];
 
   // ── Saved Jobs (persistence via IndexedDB) ──
@@ -751,6 +794,8 @@ function handleDescInput(id, value) {
     return {
       customerName: document.getElementById('customer-name').value || '',
       items: items,
+      accessData: accessData,
+      jobType: JOB_TYPE,
       p1Hours: document.getElementById('p1-hours').value || '',
       p1Notes: document.getElementById('p1-notes').value || '',
       p2Hours: document.getElementById('p2-hours').value || '',
@@ -772,6 +817,11 @@ function handleDescInput(id, value) {
     document.getElementById('customer-name').value = state.customerName || '';
     items = (state.items || []).map(it => ({ photos: [], ...it }));
     nextId = items.reduce((m, it) => Math.max(m, (it.id || 0) + 1), 1);
+    accessData = {
+      tight: { id:-1, qty:'', size:'', unit:'ea', price:'', note:'', photos:[], ...((state.accessData||{}).tight||{}) },
+      inaccessible: { id:-2, qty:'', size:'', unit:'ea', price:'', note:'', photos:[], ...((state.accessData||{}).inaccessible||{}) },
+      contamination: { id:-3, qty:'', size:'', unit:'ea', price:'', note:'', photos:[], ...((state.accessData||{}).contamination||{}) },
+    };
     graphDataURL = state.graphDataURL || null;
     renderGraph();
     document.getElementById('p1-hours').value = state.p1Hours || '';
@@ -794,6 +844,7 @@ function handleDescInput(id, value) {
     document.querySelectorAll('#roof-safety-body input[type=checkbox]').forEach(cb => { cb.checked = _roofSafety.includes(cb.value); });
     document.getElementById('roof-safety-summary').textContent = _roofSafety.length ? '— ' + _roofSafety.join(', ') : '';
     renderItems();
+    renderAccessItems();
   }
   function scheduleAutosave() {
     clearTimeout(_autosaveTimer);
@@ -817,6 +868,11 @@ function handleDescInput(id, value) {
     document.getElementById('customer-name').value = '';
     items = [];
     nextId = 1;
+    accessData = {
+      tight: { id:-1, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
+      inaccessible: { id:-2, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
+      contamination: { id:-3, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
+    };
     graphDataURL = null;
     renderGraph();
     document.getElementById('p1-hours').value = '';
@@ -836,9 +892,11 @@ function handleDescInput(id, value) {
     document.querySelectorAll('#roof-safety-body input[type=checkbox]').forEach(cb => cb.checked = false);
     document.getElementById('roof-safety-summary').textContent = '';
     addItem(); addItem();
+    renderAccessItems();
   }
   function initApp() {
     dbGetAllJobs().then(all => {
+      all = (all || []).filter(j => (j.jobType||'wildlife') === JOB_TYPE);
       if (all && all.length) {
         all.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
         const mostRecent = all[0];
@@ -856,6 +914,7 @@ function handleDescInput(id, value) {
     if (!body) return;
     body.innerHTML = '<p class="key-intro">Loading…</p>';
     dbGetAllJobs().then(all => {
+      all = (all || []).filter(j => (j.jobType||'wildlife') === JOB_TYPE);
       all.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
       let html = '<button class="add-btn" style="margin-bottom:14px;" onclick="newJobClicked()">+ New Job</button>';
       if (!all.length) {
@@ -946,6 +1005,68 @@ function handleDescInput(id, value) {
     const item = items.find(i => i.id === id);
     if (item) { item.phase = val; updateOutputs(); }
   }
+  function updateAccessField(key, field, val) {
+    if (!accessData[key]) return;
+    accessData[key][field] = val;
+    updateOutputs();
+  }
+  function renderAccessItems() {
+    const container = document.getElementById('access-items-container');
+    if (!container) return;
+    container.innerHTML = Object.keys(ACCESS_META).map(key => {
+      const a = accessData[key];
+      const meta = ACCESS_META[key];
+      const sizeRow = meta.hasSize ? (
+        '<div><div class="field-label">Size</div><select onchange="updateAccessField(\'' + key + '\',\'size\',this.value)">' +
+          '<option value=""' + (!a.size ? ' selected' : '') + '>&#8212;</option>' +
+          '<option value="Large"' + (a.size==='Large' ? ' selected' : '') + '>Large</option>' +
+          '<option value="Small"' + (a.size==='Small' ? ' selected' : '') + '>Small</option>' +
+        '</select></div>'
+      ) : '<div></div>';
+      return '<div class="card" style="margin-bottom:10px;">' +
+        '<div class="item-header"><div class="item-header-left"><span style="font-weight:600;">' + meta.name + '</span></div></div>' +
+        '<div class="row2">' +
+          '<div><div class="field-label">Quantity</div><input type="number" min="0" value="' + (a.qty||'') + '" oninput="updateAccessField(\'' + key + '\',\'qty\',this.value)"/></div>' +
+          '<div><div class="field-label">Unit</div><select onchange="updateAccessField(\'' + key + '\',\'unit\',this.value)">' + UNITS.map(u => '<option' + (u===a.unit?' selected':'') + '>' + u + '</option>').join('') + '</select></div>' +
+        '</div>' +
+        '<div class="row2">' +
+          sizeRow +
+          '<div><div class="field-label">Price <span style="color:var(--text-tertiary)">($500&#8211;$1,500, optional)</span></div><input type="number" min="0" step="1" value="' + (a.price||'') + '" oninput="updateAccessField(\'' + key + '\',\'price\',this.value)"/></div>' +
+        '</div>' +
+        '<div style="margin-bottom:8px;"><div class="field-label">Note</div><input type="text" value="' + (a.note||'') + '" oninput="updateAccessField(\'' + key + '\',\'note\',this.value)"/></div>' +
+        '<div><div class="field-label">Photos</div>' + photoRowHTML(a) + '</div>' +
+      '</div>';
+    }).join('');
+  }
+  function switchJobType(type) {
+    flushAutosave();
+    JOB_TYPE = type;
+    document.body.classList.toggle('job-insulation', type === 'insulation');
+    const ppWrap = document.getElementById('project-phases-wrap');
+    if (ppWrap) ppWrap.style.display = (type === 'insulation') ? 'none' : '';
+    if (type === 'insulation') document.getElementById('project-phases').value = '1';
+    const p1label = document.getElementById('phase1-label');
+    if (p1label) p1label.textContent = (type === 'insulation') ? 'Labor Estimate' : 'Phase 1';
+    const accessSection = document.getElementById('access-section');
+    if (accessSection) accessSection.style.display = (type === 'insulation') ? '' : 'none';
+    const warrantyBar = document.getElementById('warranty-bar');
+    if (warrantyBar) warrantyBar.style.display = (type === 'insulation') ? 'none' : '';
+    const wBtn = document.getElementById('menu-wildlife-btn');
+    const iBtn = document.getElementById('menu-insulation-btn');
+    if (wBtn) wBtn.innerHTML = '&#128062; Wildlife' + (type === 'wildlife' ? ' &#10003;' : '');
+    if (iBtn) iBtn.innerHTML = '&#127959;&#65039; Insulation' + (type === 'insulation' ? ' &#10003;' : '');
+    dbGetAllJobs().then(all => {
+      all = (all||[]).filter(j => (j.jobType||'wildlife') === type);
+      all.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      if (all.length) {
+        currentJobId = all[0].id;
+        currentJobCreatedAt = all[0].createdAt || Date.now();
+        applyJobState(all[0]);
+      } else {
+        startNewJob();
+      }
+    }).catch(() => { startNewJob(); });
+  }
   function compressImage(file, maxPx, quality, callback) {
     const reader = new FileReader();
     reader.onload = e => {
@@ -997,7 +1118,7 @@ function handleDescInput(id, value) {
   }
   function handlePhoto(id, input) {
     const files = Array.from(input.files || []); if (!files.length) return;
-    const item = items.find(i => i.id === id);
+    const item = items.find(i => i.id === id) || Object.values(accessData).find(i => i.id === id);
     if (!item) return;
     item.photos = item.photos || [];
     const remaining = Math.max(0, 8 - item.photos.length);
@@ -1008,13 +1129,13 @@ function handleDescInput(id, value) {
       compressImage(file, 1280, 0.75, (compressed, w, h) => {
         item.photos.push({ src: compressed, w: w, h: h });
         pending--;
-        if (pending === 0) renderItems();
+        if (pending === 0) { renderItems(); renderAccessItems(); }
       });
     });
   }
   function removePhoto(id, idx) {
-    const item = items.find(i => i.id === id);
-    if (item) { item.photos.splice(idx, 1); renderItems(); }
+    const item = items.find(i => i.id === id) || Object.values(accessData).find(i => i.id === id);
+    if (item) { item.photos.splice(idx, 1); renderItems(); renderAccessItems(); }
   }
 
   function photoRowHTML(item) {
@@ -1103,6 +1224,23 @@ function handleDescInput(id, value) {
   function updateOutputs() {
     let phase1Customer = [], phase2Customer = [], phase1Tech = [], phase2Tech = [], total = 0;
     let itemCount = 0;
+    if (JOB_TYPE === 'insulation') {
+      Object.keys(ACCESS_META).forEach(key => {
+        const a = accessData[key];
+        const priceNum = parseFloat(a.price);
+        if (isNaN(priceNum)) return;
+        const meta = ACCESS_META[key];
+        const qtyNum = parseFloat(a.qty) || 1;
+        const sizeStr = (meta.hasSize && a.size) ? ' (' + a.size + ')' : '';
+        const desc = meta.name + sizeStr;
+        itemCount++;
+        phase1Customer.push('- ' + desc);
+        let tl = itemCount + '. ' + desc;
+        if (a.note) tl += '\n   Note: ' + a.note;
+        phase1Tech.push(tl);
+        total += priceNum * qtyNum;
+      });
+    }
     items.forEach((item) => {
       const phase = item.phase === '2' ? '2' : '1';
       const custArr = phase === '2' ? phase2Customer : phase1Customer;
@@ -1153,6 +1291,14 @@ function handleDescInput(id, value) {
     if (items.some(item => /dig defense|underground fencing/i.test(item.desc || ''))) {
       customerLines.push('', "Please note: This work may require a utility locate (JULIE / Call Before You Dig) prior to starting. This can take 2-3 business days to clear before we're able to schedule the work. No action needed on your part — we make the call to JULIE.");
     }
+    if (JOB_TYPE === 'insulation') {
+      if (items.some(item => /remove (batt|blown) insulation/i.test(item.desc || ''))) {
+        customerLines.push('', "- Vacuum/remove droppings, debris, etc.\n- DSV (disinfect, sanitize, anti-viral) all applicable materials and areas\n- Seal any openings or vulnerabilities visible while attic is stripped");
+      }
+      if (items.some(item => /blown insulation/i.test(item.desc || ''))) {
+        customerLines.unshift("- Prepare home with plastic and construction paper to protect floors, stairs, railings, etc.", '');
+      }
+    }
     document.getElementById('output-customer').value = customerLines.join('\n');
     let techLines = ['JOB SCOPE\n'];
     if (hasPhase2) {
@@ -1168,9 +1314,11 @@ function handleDescInput(id, value) {
     if (roofSafetyList.length) techLines.push('\nRoof Safety: ' + roofSafetyList.join(', '));
     document.getElementById('output-tech').value = techLines.join('\n');
     document.getElementById('total-display').textContent = '$' + total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
-    const warranty = total > 0 ? Math.max(total * 0.10, 300) : 0;
-    const warrantyEl = document.getElementById('warranty-display');
-    if (warrantyEl) warrantyEl.textContent = '$' + warranty.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    if (JOB_TYPE !== 'insulation') {
+      const warranty = total > 0 ? Math.max(total * 0.10, 300) : 0;
+      const warrantyEl = document.getElementById('warranty-display');
+      if (warrantyEl) warrantyEl.textContent = '$' + warranty.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    }
     scheduleAutosave();
   }
 
@@ -1279,7 +1427,12 @@ function handleDescInput(id, value) {
     }
 
     // ── Scope title ──
-    const validItems = items.filter(i => i.type === 'item' && (i.desc||'').trim());
+    const accessAsItems = JOB_TYPE === 'insulation' ? Object.keys(ACCESS_META).filter(k => accessData[k].price !== '' && !isNaN(parseFloat(accessData[k].price))).map(k => {
+      const a = accessData[k], meta = ACCESS_META[k];
+      const sizeStr = (meta.hasSize && a.size) ? ' (' + a.size + ')' : '';
+      return { type:'item', id:a.id, qty:a.qty, unit:a.unit||'ea', desc: meta.name + sizeStr, price:a.price, material:'', techNotes:a.note||'', photos:a.photos||[] };
+    }) : [];
+    const validItems = accessAsItems.concat(items.filter(i => i.type === 'item' && (i.desc||'').trim()));
     const validNotes = items.filter(i => i.type === 'note' && ((i.material||'').trim() || (i.techNotes||'').trim()));
     const total = validItems.length + validNotes.length;
     ensureSpace(10);
@@ -1437,12 +1590,14 @@ function handleDescInput(id, value) {
       doc.text('TOTAL', ML, y + 4);
       doc.text('$' + grandTotal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}), ML + CW, y + 4, { align: 'right' });
       y += 8;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8.5);
-      doc.setTextColor(100, 100, 100);
-      doc.text('Annual warranty (10%, $300 min)', ML, y + 4);
-      doc.text('$' + warranty.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}), ML + CW, y + 4, { align: 'right' });
-      y += 8;
+      if (JOB_TYPE !== 'insulation') {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Annual warranty (10%, $300 min)', ML, y + 4);
+        doc.text('$' + warranty.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}), ML + CW, y + 4, { align: 'right' });
+        y += 8;
+      }
     }
 
     addFooter();
