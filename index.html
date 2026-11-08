@@ -44,6 +44,19 @@
     .pdf-btn:active { opacity: 0.8; }
 .key-btn { font-size: 13px; padding: 8px 14px; border-radius: var(--radius-md); background: transparent; color: var(--text); border: 1px solid var(--border-strong); font-family: inherit; cursor: pointer; font-weight: 500; white-space: nowrap; }
 .key-btn:active { background: var(--bg-secondary); }
+
+.hamburger-btn { background: transparent; border: none; color: var(--text); font-size: 22px; line-height: 1; padding: 4px 8px; cursor: pointer; border-radius: var(--radius-md); }
+.hamburger-btn:active { background: var(--bg-secondary); }
+.side-menu-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1099; }
+.side-menu { display: none; position: fixed; top: 0; left: 0; bottom: 0; width: 260px; max-width: 80vw; background: var(--bg-secondary); border-right: 0.5px solid var(--border); z-index: 1100; flex-direction: column; }
+.side-menu-header { padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top)); border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 10px; }
+.side-menu-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.side-menu-body { padding: 10px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+.side-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; font-size: 14px; padding: 12px 14px; border-radius: var(--radius-md); background: transparent; color: var(--text); border: 1px solid var(--border); font-family: inherit; cursor: pointer; font-weight: 500; }
+.side-menu-item:active { background: var(--bg); }
+.side-menu-item-disabled { opacity: 0.45; cursor: default; justify-content: space-between; }
+.side-menu-item-disabled:active { background: transparent; }
+.side-menu-badge { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); font-weight: 600; }
 .key-overlay { display: none; position: fixed; inset: 0; background: var(--bg-secondary); z-index: 1000; flex-direction: column; }
 .key-overlay-header { background: var(--bg-secondary); border-bottom: 0.5px solid var(--border); padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top)); position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 10px; }
 .key-overlay-title { font-size: 15px; font-weight: 600; color: var(--text); }
@@ -205,10 +218,22 @@
 </script>
 <!-- ── SCREEN APP ── -->
 <div class="header">
-  <img id="header-logo" alt="Tactical Wildlife Control" />
-  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
-    <button class="key-btn" onclick="openJobs()">&#128193; Jobs</button>
-    <button class="key-btn" onclick="openKey()">&#128214; Key</button>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <button class="hamburger-btn" onclick="openMenu()" aria-label="Menu">&#9776;</button>
+    <img id="header-logo" alt="Tactical Wildlife Control" />
+  </div>
+</div>
+
+<div class="side-menu-backdrop" id="side-menu-backdrop" onclick="closeMenu()"></div>
+<div class="side-menu" id="side-menu">
+  <div class="side-menu-header">
+    <span class="side-menu-title">Menu</span>
+    <button class="key-close-btn" onclick="closeMenu()">&#10003; Close</button>
+  </div>
+  <div class="side-menu-body">
+    <button class="side-menu-item" onclick="closeMenu(); openJobs();">&#128193; Jobs</button>
+    <button class="side-menu-item" onclick="closeMenu(); openKey();">&#128214; Key</button>
+    <button class="side-menu-item side-menu-item-disabled" disabled>&#127959;&#65039; Insulation <span class="side-menu-badge">Coming soon</span></button>
   </div>
 </div>
 
@@ -481,6 +506,16 @@ function openKey() {
 
 function closeKey() {
   document.getElementById('key-overlay').style.display = 'none';
+}
+
+function openMenu() {
+  document.getElementById('side-menu').style.display = 'flex';
+  document.getElementById('side-menu-backdrop').style.display = 'block';
+}
+
+function closeMenu() {
+  document.getElementById('side-menu').style.display = 'none';
+  document.getElementById('side-menu-backdrop').style.display = 'none';
 }
 
 function handleDescInput(id, value) {
