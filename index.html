@@ -289,6 +289,14 @@
 
   <div class="card" style="margin-bottom:14px;display:none;" id="access-section">
     <p class="section-label" style="margin-bottom:8px;">Access and Workability</p>
+    <button type="button" class="notes-toggle-label" onclick="toggleAccessPicker()">
+      <span class="notes-toggle-arrow" id="access-picker-arrow">&#9656;</span> Select conditions <span style="color:var(--text-tertiary)">(if any apply)</span><span id="access-picker-summary" style="color:var(--label-muted);margin-left:6px;"></span>
+    </button>
+    <div id="access-picker-body" style="display:none;flex-direction:column;gap:8px;margin-top:8px;margin-bottom:10px;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-primary);"><input type="checkbox" value="tight" onchange="toggleAccessSelected('tight',this.checked)"> Tight, Prone Required Access</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-primary);"><input type="checkbox" value="inaccessible" onchange="toggleAccessSelected('inaccessible',this.checked)"> Inaccessible without Cutting</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-primary);"><input type="checkbox" value="contamination" onchange="toggleAccessSelected('contamination',this.checked)"> Extreme Contamination</label>
+    </div>
     <div id="access-items-container"></div>
   </div>
 
@@ -726,9 +734,9 @@ function handleDescInput(id, value) {
   let graphDataURL = null;
   let JOB_TYPE = 'wildlife';
   let accessData = {
-    tight: { id:-1, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
-    inaccessible: { id:-2, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
-    contamination: { id:-3, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
+    tight: { id:-1, selected:false, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
+    inaccessible: { id:-2, selected:false, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
+    contamination: { id:-3, selected:false, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
   };
   const ACCESS_META = {
     tight: { name: 'Tight, Prone Required Access', hasSize: true },
@@ -818,9 +826,9 @@ function handleDescInput(id, value) {
     items = (state.items || []).map(it => ({ photos: [], ...it }));
     nextId = items.reduce((m, it) => Math.max(m, (it.id || 0) + 1), 1);
     accessData = {
-      tight: { id:-1, qty:'', size:'', unit:'ea', price:'', note:'', photos:[], ...((state.accessData||{}).tight||{}) },
-      inaccessible: { id:-2, qty:'', size:'', unit:'ea', price:'', note:'', photos:[], ...((state.accessData||{}).inaccessible||{}) },
-      contamination: { id:-3, qty:'', size:'', unit:'ea', price:'', note:'', photos:[], ...((state.accessData||{}).contamination||{}) },
+      tight: { id:-1, selected:false, qty:'', size:'', unit:'ea', price:'', note:'', photos:[], ...((state.accessData||{}).tight||{}) },
+      inaccessible: { id:-2, selected:false, qty:'', size:'', unit:'ea', price:'', note:'', photos:[], ...((state.accessData||{}).inaccessible||{}) },
+      contamination: { id:-3, selected:false, qty:'', size:'', unit:'ea', price:'', note:'', photos:[], ...((state.accessData||{}).contamination||{}) },
     };
     graphDataURL = state.graphDataURL || null;
     renderGraph();
@@ -845,6 +853,7 @@ function handleDescInput(id, value) {
     document.getElementById('roof-safety-summary').textContent = _roofSafety.length ? '— ' + _roofSafety.join(', ') : '';
     renderItems();
     renderAccessItems();
+    syncAccessCheckboxes();
   }
   function scheduleAutosave() {
     clearTimeout(_autosaveTimer);
@@ -869,9 +878,9 @@ function handleDescInput(id, value) {
     items = [];
     nextId = 1;
     accessData = {
-      tight: { id:-1, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
-      inaccessible: { id:-2, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
-      contamination: { id:-3, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
+      tight: { id:-1, selected:false, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
+      inaccessible: { id:-2, selected:false, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
+      contamination: { id:-3, selected:false, qty:'', size:'', unit:'ea', price:'', note:'', photos:[] },
     };
     graphDataURL = null;
     renderGraph();
@@ -893,6 +902,7 @@ function handleDescInput(id, value) {
     document.getElementById('roof-safety-summary').textContent = '';
     addItem(); addItem();
     renderAccessItems();
+    syncAccessCheckboxes();
   }
   function initApp() {
     dbGetAllJobs().then(all => {
@@ -1010,10 +1020,36 @@ function handleDescInput(id, value) {
     accessData[key][field] = val;
     updateOutputs();
   }
+  function toggleAccessPicker() {
+    const body = document.getElementById('access-picker-body');
+    const arrow = document.getElementById('access-picker-arrow');
+    const open = body.style.display === 'flex';
+    body.style.display = open ? 'none' : 'flex';
+    arrow.innerHTML = open ? '&#9656;' : '&#9662;';
+  }
+  function updateAccessPickerSummary() {
+    const names = Object.keys(ACCESS_META).filter(k => accessData[k].selected).map(k => ACCESS_META[k].name);
+    const el = document.getElementById('access-picker-summary');
+    if (el) el.textContent = names.length ? '\u2014 ' + names.join(', ') : '';
+  }
+  function syncAccessCheckboxes() {
+    Object.keys(ACCESS_META).forEach(key => {
+      const cb = document.querySelector('#access-picker-body input[value="' + key + '"]');
+      if (cb) cb.checked = !!accessData[key].selected;
+    });
+    updateAccessPickerSummary();
+  }
+  function toggleAccessSelected(key, checked) {
+    if (!accessData[key]) return;
+    accessData[key].selected = checked;
+    renderAccessItems();
+    updateAccessPickerSummary();
+    updateOutputs();
+  }
   function renderAccessItems() {
     const container = document.getElementById('access-items-container');
     if (!container) return;
-    container.innerHTML = Object.keys(ACCESS_META).map(key => {
+    container.innerHTML = Object.keys(ACCESS_META).filter(key => accessData[key].selected).map(key => {
       const a = accessData[key];
       const meta = ACCESS_META[key];
       const sizeRow = meta.hasSize ? (
@@ -1227,6 +1263,7 @@ function handleDescInput(id, value) {
     if (JOB_TYPE === 'insulation') {
       Object.keys(ACCESS_META).forEach(key => {
         const a = accessData[key];
+        if (!a.selected) return;
         const priceNum = parseFloat(a.price);
         if (isNaN(priceNum)) return;
         const meta = ACCESS_META[key];
@@ -1426,7 +1463,7 @@ function handleDescInput(id, value) {
     }
 
     // ── Scope title ──
-    const accessAsItems = JOB_TYPE === 'insulation' ? Object.keys(ACCESS_META).filter(k => accessData[k].price !== '' && !isNaN(parseFloat(accessData[k].price))).map(k => {
+    const accessAsItems = JOB_TYPE === 'insulation' ? Object.keys(ACCESS_META).filter(k => accessData[k].selected && accessData[k].price !== '' && !isNaN(parseFloat(accessData[k].price))).map(k => {
       const a = accessData[k], meta = ACCESS_META[k];
       const sizeStr = (meta.hasSize && a.size) ? ' (' + a.size + ')' : '';
       return { type:'item', id:a.id, qty:a.qty, unit:a.unit||'ea', desc: meta.name + sizeStr, price:a.price, material:'', techNotes:a.note||'', photos:a.photos||[] };
