@@ -253,6 +253,7 @@
       <select id="project-phases" onchange="updateProjectPhases()">
         <option value="1">Single phase</option>
         <option value="2">2 phases</option>
+        <option value="3">3 phases</option>
       </select>
     </div>
     <div style="display:grid;grid-template-columns:1fr;gap:8px;" id="phase-cards-grid">
@@ -272,6 +273,15 @@
       <div class="notes-toggle-wrap">
         <button type="button" class="notes-toggle-label" onclick="toggleNotes('p2')"><span class="notes-toggle-arrow" id="p2-notes-arrow">&#9656;</span> Notes for tech <span style="color:var(--text-tertiary)">(optional)</span><span class="notes-dot" id="p2-notes-dot"></span></button>
         <div class="notes-toggle-body" id="p2-notes-wrap" style="display:none;"><input type="text" id="p2-notes" placeholder="e.g. close off entry points, remove traps" oninput="updateLaborTime()" /></div>
+      </div>
+    </div>
+    <div class="card" id="phase3-card" style="display:none;">
+      <p style="font-size:11px;font-weight:600;color:var(--label-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">Phase 3</p>
+      <div style="margin-bottom:8px;"><div class="field-label">Estimated hours</div><div class="labor-input-wrap"><input type="number" id="p3-hours" placeholder="0" min="0" step="0.5" oninput="updateLaborTime()" /><span class="labor-unit">hrs</span></div></div>
+      <div style="margin-bottom:8px;"><div class="field-label">Operators needed</div><select id="p3-operators" onchange="updateLaborTime()"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
+      <div class="notes-toggle-wrap">
+        <button type="button" class="notes-toggle-label" onclick="toggleNotes('p3')"><span class="notes-toggle-arrow" id="p3-notes-arrow">&#9656;</span> Notes for tech <span style="color:var(--text-tertiary)">(optional)</span><span class="notes-dot" id="p3-notes-dot"></span></button>
+        <div class="notes-toggle-body" id="p3-notes-wrap" style="display:none;"><input type="text" id="p3-notes" placeholder="e.g. close off entry points, remove traps" oninput="updateLaborTime()" /></div>
       </div>
     </div>
     </div>
@@ -645,8 +655,11 @@ function handleDescInput(id, value) {
     const p2h = parseFloat(document.getElementById('p2-hours')?.value) || 0;
     const p2n = (document.getElementById('p2-notes')?.value || '').trim();
     const p2op = parseInt(document.getElementById('p2-operators')?.value) || 1;
-    const hasP1 = p1h > 0 || p1n || p1op > 1, hasP2 = p2h > 0 || p2n || p2op > 1;
-    if (!hasP1 && !hasP2) return '';
+    const p3h = parseFloat(document.getElementById('p3-hours')?.value) || 0;
+    const p3n = (document.getElementById('p3-notes')?.value || '').trim();
+    const p3op = parseInt(document.getElementById('p3-operators')?.value) || 1;
+    const hasP1 = p1h > 0 || p1n || p1op > 1, hasP2 = p2h > 0 || p2n || p2op > 1, hasP3 = p3h > 0 || p3n || p3op > 1;
+    if (!hasP1 && !hasP2 && !hasP3) return '';
     let block = '';
     if (hasP1) {
       block += '--- PHASE 1 ---';
@@ -661,13 +674,23 @@ function handleDescInput(id, value) {
       block += '\nOperators needed: ' + p2op;
       if (p2n) block += '\nNotes: ' + p2n;
     }
+    if (hasP3) {
+      if (block) block += '\n\n';
+      block += '--- PHASE 3 ---';
+      if (p3h) block += '\nEstimated time: ' + p3h + ' hr' + (p3h !== 1 ? 's' : '');
+      block += '\nOperators needed: ' + p3op;
+      if (p3n) block += '\nNotes: ' + p3n;
+    }
     return block;
   }
-  function updateLaborTime() { updateNotesDot('p1'); updateNotesDot('p2'); updateOutputs(); }
+  function updateLaborTime() { updateNotesDot('p1'); updateNotesDot('p2'); updateNotesDot('p3'); updateOutputs(); }
   function updateProjectPhases() {
-    const is2 = document.getElementById('project-phases').value === '2';
+    const val = document.getElementById('project-phases').value;
+    const is2 = val === '2' || val === '3';
+    const is3 = val === '3';
     document.getElementById('phase2-card').style.display = is2 ? '' : 'none';
-    document.getElementById('phase-cards-grid').style.gridTemplateColumns = is2 ? '1fr 1fr' : '1fr';
+    document.getElementById('phase3-card').style.display = is3 ? '' : 'none';
+    document.getElementById('phase-cards-grid').style.gridTemplateColumns = (val === '2') ? '1fr 1fr' : '1fr';
     if (!is2) {
       document.getElementById('p2-hours').value = '';
       document.getElementById('p2-notes').value = '';
@@ -675,6 +698,14 @@ function handleDescInput(id, value) {
       document.getElementById('p2-notes-wrap').style.display = 'none';
       document.getElementById('p2-notes-arrow').innerHTML = '&#9656;';
       updateNotesDot('p2');
+    }
+    if (!is3) {
+      document.getElementById('p3-hours').value = '';
+      document.getElementById('p3-notes').value = '';
+      document.getElementById('p3-operators').value = '1';
+      document.getElementById('p3-notes-wrap').style.display = 'none';
+      document.getElementById('p3-notes-arrow').innerHTML = '&#9656;';
+      updateNotesDot('p3');
     }
     updateLaborTime();
   }
@@ -808,8 +839,11 @@ function handleDescInput(id, value) {
       p1Notes: document.getElementById('p1-notes').value || '',
       p2Hours: document.getElementById('p2-hours').value || '',
       p2Notes: document.getElementById('p2-notes').value || '',
+      p3Hours: document.getElementById('p3-hours').value || '',
+      p3Notes: document.getElementById('p3-notes').value || '',
       p1Operators: document.getElementById('p1-operators').value || '1',
       p2Operators: document.getElementById('p2-operators').value || '1',
+      p3Operators: document.getElementById('p3-operators').value || '1',
       projectPhases: document.getElementById('project-phases').value || '1',
       roofSafety: getRoofSafetyList(),
       graphDataURL: graphDataURL,
@@ -834,20 +868,27 @@ function handleDescInput(id, value) {
     renderGraph();
     document.getElementById('p1-hours').value = state.p1Hours || '';
     document.getElementById('p1-notes').value = state.p1Notes || '';
+    document.getElementById('p3-hours').value = state.p3Hours || '';
+    document.getElementById('p3-notes').value = state.p3Notes || '';
     document.getElementById('p2-hours').value = state.p2Hours || '';
     document.getElementById('p2-notes').value = state.p2Notes || '';
     document.getElementById('p1-operators').value = state.p1Operators || '1';
     document.getElementById('p2-operators').value = state.p2Operators || '1';
+    document.getElementById('p3-operators').value = state.p3Operators || '1';
     document.getElementById('project-phases').value = state.projectPhases || ((state.p2Hours || (state.p2Notes||'').trim()) ? '2' : '1');
-    const is2Phase = document.getElementById('project-phases').value === '2';
+    const is2Phase = document.getElementById('project-phases').value === '2' || document.getElementById('project-phases').value === '3';
+    const is3Phase = document.getElementById('project-phases').value === '3';
     document.getElementById('phase2-card').style.display = is2Phase ? '' : 'none';
-    document.getElementById('phase-cards-grid').style.gridTemplateColumns = is2Phase ? '1fr 1fr' : '1fr';
-    const p1Open = !!(state.p1Notes || '').trim(), p2Open = !!(state.p2Notes || '').trim();
+    document.getElementById('phase3-card').style.display = is3Phase ? '' : 'none';
+    document.getElementById('phase-cards-grid').style.gridTemplateColumns = (document.getElementById('project-phases').value === '2') ? '1fr 1fr' : '1fr';
+    const p1Open = !!(state.p1Notes || '').trim(), p2Open = !!(state.p2Notes || '').trim(), p3Open = !!(state.p3Notes || '').trim();
     document.getElementById('p1-notes-wrap').style.display = p1Open ? 'block' : 'none';
     document.getElementById('p1-notes-arrow').innerHTML = p1Open ? '&#9662;' : '&#9656;';
     document.getElementById('p2-notes-wrap').style.display = p2Open ? 'block' : 'none';
     document.getElementById('p2-notes-arrow').innerHTML = p2Open ? '&#9662;' : '&#9656;';
-    updateNotesDot('p1'); updateNotesDot('p2');
+    document.getElementById('p3-notes-wrap').style.display = p3Open ? 'block' : 'none';
+    document.getElementById('p3-notes-arrow').innerHTML = p3Open ? '&#9662;' : '&#9656;';
+    updateNotesDot('p1'); updateNotesDot('p2'); updateNotesDot('p3');
     const _roofSafety = state.roofSafety || [];
     document.querySelectorAll('#roof-safety-body input[type=checkbox]').forEach(cb => { cb.checked = _roofSafety.includes(cb.value); });
     document.getElementById('roof-safety-summary').textContent = _roofSafety.length ? '— ' + _roofSafety.join(', ') : '';
@@ -888,16 +929,22 @@ function handleDescInput(id, value) {
     document.getElementById('p1-notes').value = '';
     document.getElementById('p2-hours').value = '';
     document.getElementById('p2-notes').value = '';
+    document.getElementById('p3-hours').value = '';
+    document.getElementById('p3-notes').value = '';
     document.getElementById('p1-operators').value = '1';
     document.getElementById('p2-operators').value = '1';
+    document.getElementById('p3-operators').value = '1';
     document.getElementById('project-phases').value = '1';
     document.getElementById('phase2-card').style.display = 'none';
+    document.getElementById('phase3-card').style.display = 'none';
     document.getElementById('phase-cards-grid').style.gridTemplateColumns = '1fr';
     document.getElementById('p1-notes-wrap').style.display = 'none';
     document.getElementById('p1-notes-arrow').innerHTML = '&#9656;';
     document.getElementById('p2-notes-wrap').style.display = 'none';
     document.getElementById('p2-notes-arrow').innerHTML = '&#9656;';
-    updateNotesDot('p1'); updateNotesDot('p2');
+    document.getElementById('p3-notes-wrap').style.display = 'none';
+    document.getElementById('p3-notes-arrow').innerHTML = '&#9656;';
+    updateNotesDot('p1'); updateNotesDot('p2'); updateNotesDot('p3');
     document.querySelectorAll('#roof-safety-body input[type=checkbox]').forEach(cb => cb.checked = false);
     document.getElementById('roof-safety-summary').textContent = '';
     addItem(); addItem();
@@ -1200,7 +1247,7 @@ function handleDescInput(id, value) {
         div.setAttribute('data-id', item.id);
         div.innerHTML =
           '<div class="item-header">' +
-            '<div class="item-header-left"><span class="drag-handle" title="Drag to reorder">&#9776;</span><span class="note-badge">★ Note</span>' + '<select class="phase-select" onchange="setItemPhase(' + item.id + ',this.value)"><option value="1"' + (item.phase!=='2'?' selected':'') + '>Phase 1</option><option value="2"' + (item.phase==='2'?' selected':'') + '>Phase 2</option></select>' + '</div>' +
+            '<div class="item-header-left"><span class="drag-handle" title="Drag to reorder">&#9776;</span><span class="note-badge">★ Note</span>' + '<select class="phase-select" onchange="setItemPhase(' + item.id + ',this.value)"><option value="1"' + (item.phase!=='2'&&item.phase!=='3'?' selected':'') + '>Phase 1</option><option value="2"' + (item.phase==='2'?' selected':'') + '>Phase 2</option><option value="3"' + (item.phase==='3'?' selected':'') + '>Phase 3</option></select>' + '</div>' +
             '<button class="remove-btn" onclick="removeItem(' + item.id + ')">&#215;</button>' +
           '</div>' +
           '<div style="margin-bottom:8px;"><div class="field-label">Material / spec</div>' +
@@ -1216,7 +1263,7 @@ function handleDescInput(id, value) {
         div.setAttribute('data-id', item.id);
         div.innerHTML =
           '<div class="item-header">' +
-            '<div class="item-header-left"><span class="drag-handle" title="Drag to reorder">&#9776;</span><span class="item-num">#' + itemCount + '</span>' + '<select class="phase-select" onchange="setItemPhase(' + item.id + ',this.value)"><option value="1"' + (item.phase!=='2'?' selected':'') + '>Phase 1</option><option value="2"' + (item.phase==='2'?' selected':'') + '>Phase 2</option></select>' + '</div>' +
+            '<div class="item-header-left"><span class="drag-handle" title="Drag to reorder">&#9776;</span><span class="item-num">#' + itemCount + '</span>' + '<select class="phase-select" onchange="setItemPhase(' + item.id + ',this.value)"><option value="1"' + (item.phase!=='2'&&item.phase!=='3'?' selected':'') + '>Phase 1</option><option value="2"' + (item.phase==='2'?' selected':'') + '>Phase 2</option><option value="3"' + (item.phase==='3'?' selected':'') + '>Phase 3</option></select>' + '</div>' +
             '<button class="remove-btn" onclick="removeItem(' + item.id + ')">&#215;</button>' +
           '</div>' +
           '<div class="row3">' +
@@ -1258,7 +1305,7 @@ function handleDescInput(id, value) {
   }
 
   function updateOutputs() {
-    let phase1Customer = [], phase2Customer = [], phase1Tech = [], phase2Tech = [], total = 0;
+    let phase1Customer = [], phase2Customer = [], phase3Customer = [], phase1Tech = [], phase2Tech = [], phase3Tech = [], total = 0;
     let itemCount = 0;
     if (JOB_TYPE === 'insulation') {
       Object.keys(ACCESS_META).forEach(key => {
@@ -1278,9 +1325,9 @@ function handleDescInput(id, value) {
       });
     }
     items.forEach((item) => {
-      const phase = item.phase === '2' ? '2' : '1';
-      const custArr = phase === '2' ? phase2Customer : phase1Customer;
-      const techArr = phase === '2' ? phase2Tech : phase1Tech;
+      const phase = item.phase === '3' ? '3' : (item.phase === '2' ? '2' : '1');
+      const custArr = phase === '3' ? phase3Customer : (phase === '2' ? phase2Customer : phase1Customer);
+      const techArr = phase === '3' ? phase3Tech : (phase === '2' ? phase2Tech : phase1Tech);
       if (item.type === 'note') {
         const mat = (item.material||'').trim();
         if (mat || item.techNotes) {
@@ -1312,12 +1359,13 @@ function handleDescInput(id, value) {
       const paintNames = [...new Set(paintItems.map(i => (i.desc||'').replace(/\s*[\u2013-]\s*(?:Textured\/)?Painted to Match$/i, '').trim()))];
       phase2Tech.unshift('\u2605 NOTE\n   Paint/texture match required: ' + paintNames.join(', ') + '\n   Complete texture/paint match using the sample taken during the Phase 1 visit.');
     }
-    const hasPhase2 = phase2Customer.length > 0 || phase2Tech.length > 0;
+    const hasPhase2 = phase2Customer.length > 0 || phase2Tech.length > 0 || phase3Customer.length > 0 || phase3Tech.length > 0;
     let customerLines;
     if (hasPhase2) {
       customerLines = [];
       if (phase1Customer.length) { customerLines.push('PHASE 1', ''); customerLines.push(...phase1Customer); }
       if (phase2Customer.length) { if (customerLines.length) customerLines.push(''); customerLines.push('PHASE 2', ''); customerLines.push(...phase2Customer); }
+      if (phase3Customer.length) { if (customerLines.length) customerLines.push(''); customerLines.push('PHASE 3', ''); customerLines.push(...phase3Customer); }
     } else {
       customerLines = phase1Customer;
     }
@@ -1338,9 +1386,10 @@ function handleDescInput(id, value) {
     document.getElementById('output-customer').value = customerLines.join('\n');
     let techLines = ['JOB SCOPE\n'];
     if (hasPhase2) {
-      let techHasP1 = false;
+      let techHasP1 = false, techHasP2 = false;
       if (phase1Tech.length) { techLines.push('PHASE 1', ''); techLines.push(...phase1Tech); techHasP1 = true; }
-      if (phase2Tech.length) { if (techHasP1) techLines.push(''); techLines.push('PHASE 2', ''); techLines.push(...phase2Tech); }
+      if (phase2Tech.length) { if (techHasP1) techLines.push(''); techLines.push('PHASE 2', ''); techLines.push(...phase2Tech); techHasP2 = true; }
+      if (phase3Tech.length) { if (techHasP1 || techHasP2) techLines.push(''); techLines.push('PHASE 3', ''); techLines.push(...phase3Tech); }
     } else {
       techLines.push(...phase1Tech);
     }
