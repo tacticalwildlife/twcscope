@@ -193,9 +193,9 @@
     for (let i = 0; i < s.length; i++) { h = (h * 31 + s.charCodeAt(i)) >>> 0; }
     return h;
   }
-  var PIN_HASH = 1600800;
+  var PIN_HASH = 1663264;
   var lockScreen = document.getElementById('lock-screen');
-  var unlocked = localStorage.getItem('twc_unlocked') === '1';
+  var unlocked = localStorage.getItem('twc_unlocked') === String(PIN_HASH);
   if (unlocked) {
     lockScreen.style.display = 'none';
   } else {
@@ -206,7 +206,7 @@
       errorEl.style.display = 'none';
       if (input.value.length === 4) {
         if (pinHash(input.value) === PIN_HASH) {
-          localStorage.setItem('twc_unlocked', '1');
+          localStorage.setItem('twc_unlocked', String(PIN_HASH));
           lockScreen.style.display = 'none';
         } else {
           errorEl.style.display = 'block';
