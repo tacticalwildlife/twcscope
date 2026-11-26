@@ -341,7 +341,7 @@
 
   <div class="card">
     <div class="output-header">
-      <span class="tag tag-customer">Customer — General Exclusion</span>
+      <span class="tag tag-customer" id="customer-output-tag">Customer — General Exclusion</span>
       <div style="display:flex; gap:6px;">
         <button class="copy-btn" id="copy-customer" onclick="copyOutput('customer')">Copy</button>
         <button class="copy-btn" id="pdf-customer" onclick="buildPdfDoc(false)">&#128196; Export</button>
@@ -431,7 +431,7 @@
     { name: 'Soffit Return – Textured/Painted to Match', price: 390, hint: '', unit: 'ea', cat: 'Roof/Heights' },
     { name: 'Fascia Reinforcement – Unpainted (White Metal)', price: 315, hint: '', unit: 'ea', cat: 'Roof/Heights' },
     { name: 'Fascia Reinforcement – Textured/Painted to Match', price: 390, hint: '', unit: 'ea', cat: 'Roof/Heights' },
-    { name: 'Solar Panel Fencing', price: null, hint: '$28–35', unit: 'LF', cat: 'Roof/Heights' },
+    { name: 'Solar Panel Fencing', price: null, hint: '$28–35/LF', unit: 'LF', cat: 'Roof/Heights' },
     { name: 'Gutter Cleaning', price: 7, hint: '', unit: 'LF', cat: 'Gutters' },
     { name: 'Gutter Guard Install', price: 21, hint: '', unit: 'LF', cat: 'Gutters' },
     { name: 'Gutter Guard Removal', price: 18, hint: '', unit: 'LF', cat: 'Gutters' },
@@ -739,15 +739,25 @@ function handleDescInput(id, value) {
   }
 
 
+  // Blank qty is counted as 1 by callers (parseFloat(qty) || 1). Dollar floors
+  // match the price list; lines labeled "(1 hr min)" bill at least one hour
+  // at the rate entered on that line.
+  function lineAmount(desc, qty, price) {
+    let total = qty * price;
+    const d = desc || '';
+    if (/gutter cleaning/i.test(d)) total = Math.max(total, 750);
+    if (/dig defense/i.test(d)) total = Math.max(total, 1125);
+    if (/\(1 hr min\)/i.test(d)) total = Math.max(total, price);
+    return total;
+  }
+
   function updateLineTotal(id) {
     const item = items.find(i => i.id === id);
     const el = document.getElementById('lt-' + id);
     if (!item || !el) return;
     const qty = parseFloat(item.qty) || 1;
     const price = parseFloat(item.price) || 0;
-    let total = qty * price;
-    if (/gutter cleaning/i.test(item.desc||'')) total = Math.max(total, 750);
-    if (/dig defense/i.test(item.desc||'')) total = Math.max(total, 1125);
+    const total = lineAmount(item.desc, qty, price);
     const amtEl = el.querySelector('.line-total-amount');
     if (amtEl) {
       if (total > 0) {
@@ -849,10 +859,32 @@ function handleDescInput(id, value) {
       graphDataURL: graphDataURL,
     };
   }
+  function fieldFilled(v) {
+    return String(v == null ? '' : v).trim() !== '';
+  }
   function jobHasContent(state) {
-    return !!((state.customerName || '').trim() ||
-      (state.items || []).some(it => (it.desc || '').trim() || (it.material || '').trim() || (it.techNotes || '').trim()) ||
-      state.p1Hours || state.p2Hours || (state.p1Notes || '').trim() || (state.p2Notes || '').trim() ||
+    const itemHas = (state.items || []).some(it =>
+      fieldFilled(it.desc) || fieldFilled(it.material) || fieldFilled(it.techNotes) ||
+      fieldFilled(it.qty) || fieldFilled(it.price) ||
+      (it.unit && it.unit !== 'ea') ||
+      (it.phase && it.phase !== '1') ||
+      (it.photos && it.photos.length)
+    );
+    const accessHas = Object.keys(state.accessData || {}).some(key => {
+      const a = state.accessData[key];
+      if (!a) return false;
+      return !!a.selected || fieldFilled(a.qty) || fieldFilled(a.size) || fieldFilled(a.price) ||
+        fieldFilled(a.note) || (a.unit && a.unit !== 'ea') || (a.photos && a.photos.length);
+    });
+    const operatorsChanged = ['p1Operators', 'p2Operators', 'p3Operators'].some(k =>
+      fieldFilled(state[k]) && String(state[k]) !== '1'
+    );
+    return !!(fieldFilled(state.customerName) || itemHas || accessHas ||
+      fieldFilled(state.p1Hours) || fieldFilled(state.p2Hours) || fieldFilled(state.p3Hours) ||
+      fieldFilled(state.p1Notes) || fieldFilled(state.p2Notes) || fieldFilled(state.p3Notes) ||
+      operatorsChanged ||
+      (state.projectPhases && String(state.projectPhases) !== '1') ||
+      (state.roofSafety && state.roofSafety.length) ||
       state.graphDataURL);
   }
   function applyJobState(state) {
@@ -1125,6 +1157,8 @@ function handleDescInput(id, value) {
     flushAutosave();
     JOB_TYPE = type;
     document.body.classList.toggle('job-insulation', type === 'insulation');
+    const custTag = document.getElementById('customer-output-tag');
+    if (custTag) custTag.textContent = (type === 'insulation') ? 'Customer — Insulation' : 'Customer — General Exclusion';
     const ppWrap = document.getElementById('project-phases-wrap');
     if (ppWrap) ppWrap.style.display = (type === 'insulation') ? 'none' : '';
     if (type === 'insulation') document.getElementById('project-phases').value = '1';
@@ -1339,12 +1373,7 @@ function handleDescInput(id, value) {
         const qtyStr = item.qty ? item.qty + ' ' : '';
         custArr.push('- ' + qtyStr + desc);
         const price = parseFloat(item.price), qty = parseFloat(item.qty) || 1;
-        if (!isNaN(price)) {
-          let lineAmt = price * qty;
-          if (/gutter cleaning/i.test(desc)) lineAmt = Math.max(lineAmt, 750);
-          if (/dig defense/i.test(desc)) lineAmt = Math.max(lineAmt, 1125);
-          total += lineAmt;
-        }
+        if (!isNaN(price)) total += lineAmount(desc, qty, price);
         let tl = itemCount + '. ' + qtyStr + (item.unit !== 'ea' ? item.unit + ' ' : '') + desc;
         if (/painted to match/i.test(desc)) tl += '\n   * Take paint sample';
         if (/wood filler/i.test(desc)) tl += '\n   * Consider application, dry time, sanding, and finish coat when quoting';
@@ -1540,9 +1569,7 @@ function handleDescInput(id, value) {
         const priceNum = parseFloat(item.price);
         const qtyNum = parseFloat(item.qty) || 1;
         if (!isNaN(priceNum)) {
-          let lineAmt = priceNum * qtyNum;
-          if (/gutter cleaning/i.test(desc)) lineAmt = Math.max(lineAmt, 750);
-          if (/dig defense/i.test(desc)) lineAmt = Math.max(lineAmt, 1125);
+          const lineAmt = lineAmount(desc, qtyNum, priceNum);
           priceStr = '$' + lineAmt.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
         } else if (item._priceHint) {
           priceStr = item._priceHint;
@@ -1668,12 +1695,7 @@ function handleDescInput(id, value) {
       validItems.concat(accessAsItems).forEach(item => {
         const priceNum = parseFloat(item.price);
         const qtyNum = parseFloat(item.qty) || 1;
-        if (!isNaN(priceNum)) {
-          let lineAmt = priceNum * qtyNum;
-          if (/gutter cleaning/i.test((item.desc||''))) lineAmt = Math.max(lineAmt, 750);
-          if (/dig defense/i.test((item.desc||''))) lineAmt = Math.max(lineAmt, 1125);
-          grandTotal += lineAmt;
-        }
+        if (!isNaN(priceNum)) grandTotal += lineAmount(item.desc || '', qtyNum, priceNum);
       });
       const warranty = grandTotal > 0 ? Math.max(grandTotal * 0.10, 300) : 0;
       ensureSpace(20);
